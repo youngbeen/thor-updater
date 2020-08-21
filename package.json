@@ -1,6 +1,6 @@
 {
   "name": "thor-bizpage-update",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Adding Thor's configurable biz pages feature to existing project or updating it",
   "bin": "src/index.js",
   "scripts": {
@@ -9,6 +9,7 @@
   "author": "youngbeen",
   "license": "MIT",
   "dependencies": {
+    "chalk": "^4.1.0",
     "fs-extra": "^9.0.1"
   },
   "repository": {
