@@ -264,7 +264,7 @@ export default {
         this.loading = true
         customQuery(action.target, params).then(data => {
           this.loading = false
-          if (data?.respCode === system.okCode) {
+          if (data && data[system.codeParam] === system.okCode) {
             // 成功
             if (action.successCallback) {
               action.successCallback(data, this)
@@ -272,7 +272,7 @@ export default {
           } else {
             // 业务码错误
             this.$message({
-              message: `${data?.respInfo}[${data?.respCode}]`,
+              message: `${data && data[system.msgParam]}[${data && data[system.codeParam]}]`,
               type: 'error'
             })
           }
@@ -340,7 +340,7 @@ export default {
         this.loading = true
         customQuery(action.target, params).then(data => {
           this.loading = false
-          if (data?.respCode === system.okCode) {
+          if (data && data[system.codeParam] === system.okCode) {
             // 成功
             if (action.successCallback) {
               action.successCallback(data, this)
@@ -348,7 +348,7 @@ export default {
           } else {
             // 业务码错误
             this.$message({
-              message: `${data?.respInfo}[${data?.respCode}]`,
+              message: `${data && data[system.msgParam]}[${data && data[system.codeParam]}]`,
               type: 'error'
             })
           }
@@ -383,7 +383,7 @@ export default {
       this.loading = true
       customQuery(this.listPage.listTarget, params).then(data => {
         this.loading = false
-        if (data?.respCode === system.okCode) {
+        if (data && data[system.codeParam] === system.okCode) {
           // 成功
           const detail = data.data || {}
           this.list = detail.list || []
@@ -391,7 +391,7 @@ export default {
         } else {
           // 业务码错误
           this.$message({
-            message: `${data?.respInfo}[${data?.respCode}]`,
+            message: `${data && data[system.msgParam]}[${data && data[system.codeParam]}]`,
             type: 'error'
           })
         }

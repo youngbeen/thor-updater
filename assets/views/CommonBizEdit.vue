@@ -4,12 +4,12 @@
       <div class="cs-page-title">{{ pageTitle }}</div>
 
       <el-form :size="page.size || 'small'" :label-width="(editPage.labelWidth || '100') + 'px'" :label-position="editPage.align || 'right'" :inline="false" ref="addEditCommonBizForm">
-        <div class="box-wrapper" :class="columnClass" v-show="!item.displays || item.displays.includes(mode)" v-for="(item, index) in editPage.fields" :key="index">
+        <div class="box-wrapper" :class="columnClass" v-show="(!item.displays || item.displays.includes(mode)) && (!item.when || item.when(form, editPage.fields, this))" v-for="(item, index) in editPage.fields" :key="index">
           <el-form-item :class="[item.required && 'is-required']" :label="item.label">
             <!-- input类型 -->
-            <el-input v-if="item.type === 'input'" v-model="item.value" :clearable="!item.required" :disabled="mode === 'detail' || (item.edits && !item.edits.includes(mode))" placeholder="请输入"></el-input>
+            <el-input v-if="item.type === 'input'" v-model="item.value" :clearable="!item.required" :disabled="mode === 'detail' || (item.edits && !item.edits.includes(mode)) || (item.disabled && Boolean(item.disabled(form, editPage.fields, this)))" placeholder="请输入"></el-input>
             <!-- select类型 -->
-            <el-select v-else-if="item.type === 'select'" v-model="item.value" :multiple="item.multiple" :clearable="!item.required" filterable :disabled="mode === 'detail' || (item.edits && !item.edits.includes(mode))" placeholder="请选择" style="display: block;">
+            <el-select v-else-if="item.type === 'select'" v-model="item.value" :multiple="item.multiple" :clearable="!item.required" filterable :disabled="mode === 'detail' || (item.edits && !item.edits.includes(mode)) || (item.disabled && Boolean(item.disabled(form, editPage.fields, this)))" placeholder="请选择" style="display: block;">
               <el-option
                 v-for="o in item.options"
                 :key="o.value"
@@ -25,7 +25,7 @@
               type="date"
               value-format="yyyy-MM-dd"
               :clearable="!item.required"
-              :disabled="mode === 'detail' || (item.edits && !item.edits.includes(mode))"
+              :disabled="mode === 'detail' || (item.edits && !item.edits.includes(mode)) || (item.disabled && Boolean(item.disabled(form, editPage.fields, this)))"
               placeholder="请选择"
               style="display: block; width: 100%;">
             </el-date-picker>
@@ -35,7 +35,7 @@
               :options="item.options"
               :props="{ checkStrictly: item.nodeSelectable, lazy: Boolean(item.lazyOptions), lazyLoad: item.lazyOptions }"
               :clearable="!item.required"
-              :disabled="mode === 'detail' || (item.edits && !item.edits.includes(mode))"
+              :disabled="mode === 'detail' || (item.edits && !item.edits.includes(mode)) || (item.disabled && Boolean(item.disabled(form, editPage.fields, this)))"
               filterable
               placeholder="请选择"
               style="display: block;">
@@ -78,6 +78,17 @@ export default {
     }
   },
   computed: {
+    form () {
+      if (this.editPage.fields) {
+        let result = {}
+        this.editPage.fields.forEach(f => {
+          result[f.parameter] = f.value
+        })
+        return result
+      } else {
+        return {}
+      }
+    },
     pageTitle () {
       if (this.mode === 'detail') {
         return `${this.page.name}详情`
@@ -220,7 +231,7 @@ export default {
       customQuery(this.editPage.submit[`${this.mode}Target`], params).then(data => {
         // 成功
         this.loading = false
-        if (data?.respCode === system.okCode) {
+        if (data && data[system.codeParam] === system.okCode) {
           this.$message({
             message: `${this.mode === 'edit' ? '编辑' : '添加'}信息成功`,
             type: 'success'
@@ -228,7 +239,7 @@ export default {
           this.$router.go(-1)
         } else {
           this.$message({
-            message: `${data?.respInfo} [${data?.respCode}]`,
+            message: `${data && data[system.msgParam]} [${data && data[system.codeParam]}]`,
             type: 'error'
           })
         }
@@ -270,7 +281,7 @@ export default {
       this.loading = true
       customQuery(this.editPage.detailTarget, params).then(data => {
         this.loading = false
-        if (data?.respCode === system.okCode) {
+        if (data && data[system.codeParam] === system.okCode) {
           // 成功
           const detail = data.data || {}
           // 按照字段填充值
@@ -285,7 +296,7 @@ export default {
         } else {
           // 业务码错误
           this.$message({
-            message: `${data?.respInfo}[${data?.respCode}]`,
+            message: `${data && data[system.msgParam]}[${data && data[system.codeParam]}]`,
             type: 'error'
           })
         }
