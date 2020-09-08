@@ -169,12 +169,13 @@ export default {
       const keyParameter = this.page.keyParameter
       const query = this.$route.query || {}
       const params = this.$route.params || {}
-      if (!query.mode || (query.mode === 'edit' && !params[keyParameter])) {
+      const bizParams = { ...query, ...params }
+      if (!query.mode || (query.mode === 'edit' && !bizParams[keyParameter])) {
         this.$message('非法访问，请退出重试')
         return false
       }
       this.mode = query.mode
-      this.id = params[keyParameter] || ''
+      this.id = bizParams[keyParameter] || ''
       if (this.mode === 'edit' || this.mode === 'detail') {
         this.getData()
       }
@@ -189,12 +190,13 @@ export default {
     const keyParameter = this.page.keyParameter
     const query = this.$route.query || {}
     const params = this.$route.params || {}
-    if (!query.mode || (query.mode === 'edit' && !params[keyParameter])) {
+    const bizParams = { ...query, ...params }
+    if (!query.mode || (query.mode === 'edit' && !bizParams[keyParameter])) {
       this.$message('非法访问，请退出重试')
       return false
     }
     this.mode = query.mode
-    this.id = params[keyParameter] || ''
+    this.id = bizParams[keyParameter] || ''
     if (this.mode === 'edit' || this.mode === 'detail') {
       this.getData()
     }
@@ -203,8 +205,10 @@ export default {
   methods: {
     initData () {
       const _this = this
+      const query = this.$route.query || {}
       const params = this.$route.params || {}
-      if (!params.bizPageId) {
+      const bizParams = { ...query, ...params }
+      if (!bizParams.bizPageId) {
         this.$message({
           message: '非法访问，请退出重试',
           type: 'error'
@@ -212,12 +216,12 @@ export default {
         return false
       }
       let page = null
-      if (params.bizPageId[0].toUpperCase() === 'S') {
+      if (bizParams.bizPageId[0].toUpperCase() === 'S') {
         // 本地业务
-        page = systemConfig.bizPages.find(p => p.bizPageId === params.bizPageId)
-      } else if (params.bizPageId[0].toUpperCase() === 'D') {
+        page = systemConfig.bizPages.find(p => p.bizPageId === bizParams.bizPageId)
+      } else if (bizParams.bizPageId[0].toUpperCase() === 'D') {
         // 远程业务
-        page = systemConfig.remotePages.find(p => p.bizPageId === params.bizPageId)
+        page = systemConfig.remotePages.find(p => p.bizPageId === bizParams.bizPageId)
       }
       if (!page) {
         this.$message({

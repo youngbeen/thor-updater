@@ -405,7 +405,7 @@ export default {
       let params = {
         bizPageId: this.page.bizPageId
       }
-      if (action.attachParams) {
+      if (action.attachParams === undefined || action.attachParams) {
         this.listPage.filters.forEach(item => {
           let value = item.value
           item.trim && typeof (value) === 'string' && (value = value.trim()) // 左右去空
@@ -417,9 +417,20 @@ export default {
         })
       }
       if (action.type === 'router') {
+        let routerObj = {
+          query: {},
+          params: {}
+        }
+        if (action.useQuery) {
+          // 使用query方式传递参数
+          routerObj.query = params
+        } else {
+          // 使用params方式传递参数
+          routerObj.params = params
+        }
         this.$router.push(Object.assign({}, action.target, {
-          query: action.target.query || {},
-          params
+          query: Object.assign({}, action.target.query, routerObj.query),
+          params: Object.assign({}, action.target.params, routerObj.params)
         }))
       } else if (action.type === 'api') {
         if (!this.verify()) {
@@ -429,7 +440,8 @@ export default {
         let option = {
           method: action.apiParams?.method || 'post'
         }
-        customQuery(action.target, params, option).then(data => {
+        let finalTarget = this.fixApiTarget(action.target, params)
+        customQuery(finalTarget, params, option).then(data => {
           this.loading = false
           if (data && data[system.codeParam] === system.okCode) {
             // 成功
@@ -494,9 +506,20 @@ export default {
         params = Object.assign({}, params, row)
       }
       if (action.type === 'router') {
+        let routerObj = {
+          query: {},
+          params: {}
+        }
+        if (action.useQuery) {
+          // 使用query方式传递参数
+          routerObj.query = params
+        } else {
+          // 使用params方式传递参数
+          routerObj.params = params
+        }
         this.$router.push(Object.assign({}, action.target, {
-          query: action.target.query || {},
-          params
+          query: Object.assign({}, action.target.query, routerObj.query),
+          params: Object.assign({}, action.target.params, routerObj.params)
         }))
       } else if (action.type === 'api') {
         this.loading = true
