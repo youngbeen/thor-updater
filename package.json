@@ -1,6 +1,6 @@
 {
   "name": "thor-bizpage-update",
-  "version": "0.2.2",
+  "version": "0.2.3",
   "description": "Adding Thor's configurable biz pages feature to existing project or updating it",
   "bin": "src/index.js",
   "scripts": {

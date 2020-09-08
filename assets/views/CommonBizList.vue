@@ -241,6 +241,14 @@ export default {
 
   methods: {
     initData () {
+      this.filter = {
+        pageNo: 1,
+        pageSize: 10
+      }
+      this.total = 0
+      this.selections = []
+      this.list = []
+      this.defaultExpands = null
       const _this = this
       const query = this.$route.query || {}
       if (!query.bizPageId) {
