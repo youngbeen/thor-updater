@@ -287,8 +287,8 @@ export default {
               params[f.parameter] = value
             }
           }
-        } else if (f.parameter !== this.page.keyParameter) {
-          // 按照除key之外的全量字段填充
+        } else if (f.parameter !== this.page.keyParameter && (!f.displays || f.displays.includes(this.mode)) && (!f.when || f.when(this.form, this.editPage.fields, this))) {
+          // 按照除key之外且当前显示的全量字段填充
           let value = f.value
           f.trim && typeof (value) === 'string' && (value = value.trim())
           if (f.sendHandler) {
@@ -335,23 +335,26 @@ export default {
       let result = true
       for (let i = 0; i < this.editPage.fields.length; i++) {
         const item = this.editPage.fields[i]
-        let value = item.trim && typeof (item.value) === 'string' ? item.value.trim() : item.value
-        if (item.required && value !== 0 && !value) {
-          this.$message({
-            message: `请完善${item.label}`,
-            type: 'warning'
-          })
-          result = false
-          break
-        }
-        if (item.validate) {
-          let validateResult = item.validate(value, this.form, this)
-          if (validateResult) {
-            // 校验通过
-          } else {
-            // 校验不通过
+        if ((!item.displays || item.displays.includes(this.mode)) && (!item.when || item.when(this.form, this.editPage.fields, this))) {
+          // NOTE 检验仅针对显示的字段。因为不显示的字段即使检验不通过，用户也没法修改其值
+          let value = item.trim && typeof (item.value) === 'string' ? item.value.trim() : item.value
+          if (item.required && value !== 0 && !value) {
+            this.$message({
+              message: `请完善${item.label}`,
+              type: 'warning'
+            })
             result = false
             break
+          }
+          if (item.validate) {
+            let validateResult = item.validate(value, this.form, this)
+            if (validateResult) {
+              // 校验通过
+            } else {
+              // 校验不通过
+              result = false
+              break
+            }
           }
         }
       }
