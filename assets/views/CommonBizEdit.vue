@@ -104,6 +104,7 @@
 import { customQuery } from '@/api/common'
 import systemConfig from '@/models/SystemConfig'
 import system from '@/models/system'
+import bizUtil from '@/utils/CommonBizUtil'
 
 export default {
   data () {
@@ -239,23 +240,28 @@ export default {
       }
       // 处理初始值
       async function queryOptions (item) {
-        item.options = await item.defaultOptions(this)
+        item.options = await item.defaultOptions(bizParams, this)
         // NOTE 因为数据层级太深的原因，异步获取后手动update确保视图更新
         _this.$forceUpdate()
       }
       editPage.fields.forEach(item => {
-        // if (item.defaultValue) {
-        //   item.value = item.defaultValue(this)
-        // }
+        // NOTE 新增/编辑/详情共用同一页面，先始终清理脏数据
+        item.value = bizUtil.getTypeValue(item)
+        // 处理字段初始值
+        if (item.defaultValue) {
+          item.value = item.defaultValue(this)
+        }
+        // 处理字段选项数据
         if (item.defaultOptions) {
           if (item.async) {
             // 异步获取默认数据
             queryOptions(item)
           } else {
             // 正常获取
-            item.options = item.defaultOptions(this)
+            item.options = item.defaultOptions(bizParams, this)
           }
         }
+        // 补充未完善的数据
         if (item.type === 'switch' && item.options?.length < 2) {
           // 开关的选项不合法，配置为默认
           item.options = [
@@ -263,7 +269,11 @@ export default {
             { label: '开启', value: true }
           ]
         }
-        item.value = this.getTypeValue(item)
+        // 处理透传的筛选值
+        if (item.parameter !== 'bizPageId' && query[item.parameter]) {
+          // query参数中存在带入参数
+          item.value = query[item.parameter]
+        }
       })
       this.editPage = editPage
     },
@@ -279,10 +289,9 @@ export default {
       }
       let params = {}
       this.editPage.fields.forEach(f => {
-        // 先塞入所有需要的条件，并处理值
-        if (this.editPage.submit.paramsFields) {
-          // 按照配置的字段填充
-          if (this.editPage.submit.paramsFields.includes(f.parameter)) {
+        if (f.parameter !== this.page.keyParameter) {
+          if (f.send === 'always' || ((!f.send || f.send === 'display') && (!f.displays || f.displays.includes(this.mode)) && (!f.when || f.when(this.form, this.editPage.fields, this)))) {
+            // 始终上送或者在显示时上送的字段
             let value = f.value
             f.trim && typeof (value) === 'string' && (value = value.trim())
             if (f.sendHandler) {
@@ -290,15 +299,6 @@ export default {
             } else {
               params[f.parameter] = value
             }
-          }
-        } else if (f.parameter !== this.page.keyParameter && (!f.displays || f.displays.includes(this.mode)) && (!f.when || f.when(this.form, this.editPage.fields, this))) {
-          // 按照除key之外且当前显示的全量字段填充
-          let value = f.value
-          f.trim && typeof (value) === 'string' && (value = value.trim())
-          if (f.sendHandler) {
-            params[f.parameter] = f.sendHandler(value, this)
-          } else {
-            params[f.parameter] = value
           }
         }
       })
@@ -310,7 +310,7 @@ export default {
       let option = {
         method: this.editPage.submit[`${this.mode}ApiParams`] && this.editPage.submit[`${this.mode}ApiParams`].method ? this.editPage.submit[`${this.mode}ApiParams`].method : 'post'
       }
-      let finalTarget = this.fixApiTarget(this.editPage.submit[`${this.mode}Target`], params)
+      let finalTarget = bizUtil.fixApiTarget(this.editPage.submit[`${this.mode}Target`], params)
       customQuery(finalTarget, params, option).then(data => {
         // 成功
         this.loading = false
@@ -374,13 +374,13 @@ export default {
       let option = {
         method: this.editPage.detailApiParams?.method || 'post'
       }
-      let finalTarget = this.fixApiTarget(this.editPage.detailTarget, params)
+      let finalTarget = bizUtil.fixApiTarget(this.editPage.detailTarget, params)
       customQuery(finalTarget, params, option).then(data => {
         this.loading = false
         if (data && data[system.codeParam] === system.okCode) {
           // 成功
           const raw = data.data || {}
-          let detail = this.digData(raw, system.dataWrapper) || {}
+          let detail = bizUtil.digData(raw, system.dataWrapper) || {}
           // 按照字段填充值
           this.editPage.fields.forEach(item => {
             let value = detail[item.parameter] ?? ''
@@ -406,61 +406,16 @@ export default {
           type: 'error'
         })
       })
-    },
-    // 初始value类型
-    getTypeValue (item) {
-      if ((item.type === 'select' && item.multiple) || item.type === 'cascader') {
-        return []
-      } else if (item.type === 'switch') {
-        return item.options[1].value
-      } else {
-        return ''
-      }
-    },
-    digData (data, fields = []) {
-      if (fields.length) {
-        // 有剩余参数，继续深入
-        if (Object.keys(data).includes(fields[0])) {
-          // 存在该字段
-          return this.digData(data[fields[0]], fields.slice(1))
-        } else {
-          // 不存在的字段
-          return undefined
-        }
-      } else {
-        // 无参数，返回
-        return data
-      }
-    },
-    fixApiTarget (rawUrl = '', data = {}) {
-      // NOTE 目前设定动态的参数以{}包裹
-      let matches = rawUrl.match(/({[^{}]+})/g)
-      if (matches && matches.length) {
-        // 存在动态参数，将其替换为对应的数据
-        const keys = data ? Object.keys(data) : []
-        matches.forEach(m => {
-          const paramName = m.substring(1, m.length - 1).replace(/\s/g, '')
-          const replaceValue = keys.includes(paramName) ? data[paramName] : ''
-          rawUrl = rawUrl.replace(m, replaceValue)
-        })
-        return rawUrl
-      } else {
-        // 无动态参数
-        return rawUrl
-      }
     }
   }
 }
 </script>
 
-<style scoped lang="scss">
+<style scoped>
 .box-wrapper {
   padding: 0 6px;
   vertical-align: top;
 }
-// .box-complete {
-//   width: 100%;
-// }
 .box-half {
   display: inline-block;
   width: 49.5%;

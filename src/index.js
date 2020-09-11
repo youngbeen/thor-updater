@@ -15,16 +15,29 @@ let isThorProject = true // 是否是Thor生成的工程
 const currentPath = path.resolve('./')
 let pathInfo = path.parse(currentPath)
 
-const updateBizPage = () => {
-  fs.copy('node_modules/thor-bizpage-update/assets/views/', 'src/views/').then(() => {
-    console.log(success('可配置化业务支持文件已更新'))
-  }).catch((err) => {
+const updateBiz = () => {
+  // 更新
+  Promise.all([updateService('utils', '所需支持'), updateService('views', '可配置化业务支持')]).then(() => {
+    // 全部完成
+    console.log(success(`可配置化业务已全部更新完成！`))
+  }).catch(err => {
     console.error(error(err))
   })
 }
 
+const updateService = (service, serviceName) => new Promise((resolve, reject) => {
+  fs.copy(`node_modules/thor-bizpage-update/assets/${service}/`, `src/${service}/`).then(() => {
+    console.log(success(`${serviceName}已更新`))
+    resolve()
+  }).catch((err) => {
+    console.error(error(err))
+    reject(err)
+  })
+})
+
 const addFeature = () => {
-  Promise.all([addConfig(), addBizPage()]).then(() => {
+  // 新添加
+  Promise.all([addService('models', '配置文件'), addService('utils', '所需支持'), addService('views', '可配置化业务')]).then(() => {
     // 全部完成
     console.log(success(`可配置化业务已全部添加完成！`))
     console.log(`配置文件路径：${info('src/models/SystemConfig.js')}`)
@@ -34,13 +47,13 @@ const addFeature = () => {
   })
 }
 
-const addConfig = () => new Promise((resolve, reject) => {
-  fs.ensureDir('src/models/').then(() => {
-    // 确保有models文件夹
-    return fs.copy('node_modules/thor-bizpage-update/assets/models/', 'src/models/')
+const addService = (service, serviceName) => new Promise((resolve, reject) => {
+  fs.ensureDir(`src/${service}/`).then(() => {
+    // 确保有文件夹
+    return fs.copy(`node_modules/thor-bizpage-update/assets/${service}/`, `src/${service}/`)
   }).then(() => {
     // 拷贝成功
-    console.log(success('配置文件已添加'))
+    console.log(success(`${serviceName}已添加`))
     resolve()
   }).catch(err => {
     console.error(error(err))
@@ -48,33 +61,26 @@ const addConfig = () => new Promise((resolve, reject) => {
   })
 })
 
-const addBizPage = () => new Promise((resolve, reject) => {
-  fs.ensureDir('src/views/').then(() => {
-    // 确保有views文件夹
-    return fs.copy('node_modules/thor-bizpage-update/assets/views/', 'src/views/')
-  }).then(() => {
-    // 拷贝成功
-    console.log(success('可配置化业务已添加'))
-    resolve()
-  }).catch(err => {
-    console.error(error(err))
-    reject(err)
-  })
-})
-
-fs.exists('src/models/SystemConfig.js').then((exist) => {
-  // 判断工程是否存在配置文件
-  isThorProject = exist
+const proceed = () => {
   console.log(`当前工程：${info(pathInfo.name)}  状态：${isThorProject ? info('Thor工程') : warning('非Thor历史工程')}  路径：${info(currentPath)}`)
   if (isThorProject) {
     // thor工程，只更新可配置化业务文件
     console.log(info(`开始更新工程 ${warning(pathInfo.name)} 的可配置化业务`))
-    updateBizPage()
+    updateBiz()
   } else {
     // 老工程，需要添加配置文件+可配置化业务文件
     console.log(info(`开始为工程 ${warning(pathInfo.name)} 添加可配置化业务支持`))
     addFeature()
   }
+}
+
+fs.access('src/models/SystemConfig.js').then(() => {
+  // 工程存在配置文件
+  isThorProject = true
+  proceed()
 }).catch(err => {
-  console.error(err)
+  // 工程不存在配置文件
+  // console.error(err)
+  isThorProject = false
+  proceed()
 })

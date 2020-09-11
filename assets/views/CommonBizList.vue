@@ -10,6 +10,7 @@
           :size="page.size || 'small'">
           <el-form-item
             :class="[item.required && 'is-required']"
+            v-show="!item.when || item.when(form, listPage.filters, this)"
             v-for="item in listPage.filters"
             :key="item.parameter"
             :label="item.label">
@@ -64,9 +65,9 @@
             </el-button>
           </el-form-item>
           <!-- 筛选栏操作 -->
-          <el-form-item v-show="hasPermission(action.permissionKey)"
+          <el-form-item v-show="hasPermission(action.permissionKey) && (!action.when || action.when(form, this))"
             v-for="(action, index) in listPage.filterActions" :key="'fa-' + index">
-            <el-button :type="action.style" @click="handleAction(action)">
+            <el-button :type="action.style" @click="handleActionConfirm($event, 'filterAction', action, form)">
               {{ action.label }}
             </el-button>
           </el-form-item>
@@ -76,7 +77,7 @@
             <el-button
               :type="action.style || 'primary'"
               :disabled="action.disabled && action.disabled(selections, this)"
-              @click="handleBatchAction($event, action)">
+              @click="handleActionConfirm($event, 'batchAction', action, selections)">
               {{ action.label }}
             </el-button>
           </el-form-item>
@@ -88,7 +89,7 @@
         <el-table
           :data="list"
           v-loading="loading"
-          :row-key="listPage.isTreeTable ? page.keyParameter : null"
+          :row-key="getRowKey"
           :default-expand-all="listPage.treeExpendMode === 'all'"
           :expand-row-keys="defaultExpands"
           @selection-change="handleSelectionChange"
@@ -141,7 +142,7 @@
                 <el-button v-if="hasPermission(action.permissionKey) && (!action.when || action.when(scope.row, this))"
                   :type="action.style || 'primary'"
                   :size="listPage.tableActionSize || 'mini'"
-                  @click="handleTableAction($event, action, scope.row)"
+                  @click="handleActionConfirm($event, 'tableAction', action, scope.row)"
                   style="margin-right: 6px;">{{ action.label }}</el-button>
               </span>
             </template>
@@ -173,6 +174,7 @@ import { customQuery } from '@/api/common'
 import systemConfig from '@/models/SystemConfig'
 import system from '@/models/system'
 import user from '@/models/user'
+import bizUtil from '@/utils/CommonBizUtil'
 
 export default {
   data () {
@@ -287,27 +289,28 @@ export default {
       listPage.tableActions = listPage.tableActions || []
       listPage.batchActions = listPage.batchActions || []
       async function queryOptions (item) {
-        item.options = await item.defaultOptions(this)
+        item.options = await item.defaultOptions(query, this)
         // NOTE 因为数据层级太深的原因，异步获取后手动update确保视图更新
         _this.$forceUpdate()
       }
       listPage.filters.forEach(item => {
+        // 先始终清理脏数据
+        item.value = bizUtil.getTypeValue(item)
+        // 处理filter初始值
         if (item.defaultValue) {
           item.value = item.defaultValue(this)
         }
+        // 处理filter选项数据
         if (item.defaultOptions) {
           if (item.async) {
             // 异步获取默认数据
             queryOptions(item)
           } else {
             // 正常获取
-            item.options = item.defaultOptions(this)
+            item.options = item.defaultOptions(query, this)
           }
         }
-        if (item.value === undefined) {
-          // 补充未完善的value
-          item.value = this.getTypeValue(item)
-        }
+        // 处理透传的筛选值
         if (item.parameter !== 'bizPageId' && query[item.parameter]) {
           // query参数中存在带入参数
           item.value = query[item.parameter]
@@ -320,11 +323,14 @@ export default {
       this.getList()
     },
     reset () {
+      const query = this.$route.query || {}
       this.listPage.filters.forEach(item => {
-        if (item.defaultValue) {
+        if (item.parameter !== 'bizPageId' && query[item.parameter]) {
+          item.value = query[item.parameter]
+        } else if (item.defaultValue) {
           item.value = item.defaultValue(this)
         } else {
-          item.value = this.getTypeValue(item)
+          item.value = bizUtil.getTypeValue(item)
         }
       })
     },
@@ -338,85 +344,74 @@ export default {
       this.filter.pageNo = 1
       this.getList()
     },
-    handleBatchAction (e, action) {
+    handleActionConfirm (e, type, action, data) {
       if (action.confirm) {
         // 需要确认弹框
         eventBus.$emit('notifyShowPopover', {
           x: e.clientX || 0,
           y: e.clientY || 0,
-          popMsg: action.confirm.confirmMsg(this.selections, this),
+          popMsg: action.confirm.confirmMsg(data, this),
           confirmType: action.confirm.confirmType || 'primary',
           callback: () => {
-            this.proceedBatchAction(action, this.selections)
+            this.proceedAction(type, action, data)
           }
         })
       } else {
         // 无需弹框确认
-        this.proceedBatchAction(action, this.selections)
+        this.proceedAction(type, action, data)
       }
     },
-    proceedBatchAction (action, rows) {
-      if (!action || !action.data || !action.target) {
+    proceedAction (type, action, data) {
+      if (!type || !action) {
         return
       }
-      let params = action.data(rows, this)
-      if (action.type === 'router') {
-        // NOTE 暂不支持
-        // this.$router.push(Object.assign({}, action.target, {
-        //   query: action.target.query || {},
-        //   params
-        // }))
-      } else {
-        // api调用方式
-        this.loading = true
-        let option = {
-          method: action.apiParams?.method || 'post'
+      if (type === 'batchAction' && (!action.data || !action.target)) {
+        // 批量操作项缺失关键配置
+        return
+      }
+      // 处理参数
+      let params = {}
+      if (type === 'filterAction') {
+        params = {
+          bizPageId: this.page.bizPageId
         }
-        let finalTarget = this.fixApiTarget(action.target, params)
-        customQuery(finalTarget, params, option).then(data => {
-          this.loading = false
-          if (data && data[system.codeParam] === system.okCode) {
-            // 成功
-            if (action.successCallback) {
-              action.successCallback(data, this)
+        if (action.attachParams === undefined || action.attachParams) {
+          this.listPage.filters.forEach(item => {
+            let value = item.value
+            item.trim && typeof (value) === 'string' && (value = value.trim()) // 左右去空
+            if (item.handler) {
+              params[item.parameter] = item.handler(value, this)
+            } else {
+              params[item.parameter] = value
             }
-          } else {
-            // 业务码错误
-            this.$message({
-              message: `${data && data[system.msgParam]}[${data && data[system.codeParam]}]`,
-              type: 'error'
-            })
-          }
-        }).catch(error => {
-          // 失败
-          console.error(error)
-          this.loading = false
-          this.$message({
-            message: `请求失败，请稍后重试(${error})`,
-            type: 'error'
           })
-        })
+        }
+      } else if (type === 'tableAction') {
+        params = {
+          bizPageId: this.page.bizPageId
+        }
+        if (action.paramsFields?.length) {
+          // 指定参数
+          action.paramsFields.forEach(item => {
+            if (typeof (item) === 'string') {
+              // 直接指定的是字段名
+              params[item] = data[item]
+            } else {
+              // 对象类型的配置
+              let value = item.handler ? item.handler(data[item.parameter], this) : data[item.parameter]
+              params[item.as || item.parameter] = value
+            }
+          })
+        } else {
+          // 全量参数
+          params = Object.assign({}, params, data)
+        }
+      } else if (type === 'batchAction') {
+        params = action.data(data, this)
       }
-    },
-    handleAction (action) {
-      if (!action) {
-        return
-      }
-      let params = {
-        bizPageId: this.page.bizPageId
-      }
-      if (action.attachParams === undefined || action.attachParams) {
-        this.listPage.filters.forEach(item => {
-          let value = item.value
-          item.trim && typeof (value) === 'string' && (value = value.trim()) // 左右去空
-          if (item.handler) {
-            params[item.parameter] = item.handler(value, this)
-          } else {
-            params[item.parameter] = value
-          }
-        })
-      }
-      if (action.type === 'router') {
+      // 执行操作
+      if (action.type === 'router' && type !== 'batchAction') {
+        // 非批量操作router类型操作
         let routerObj = {
           query: {},
           params: {}
@@ -428,30 +423,35 @@ export default {
           // 使用params方式传递参数
           routerObj.params = params
         }
+        let keyObject = {
+          bizPageId: this.page.bizPageId
+        }
+        keyObject[this.page.keyParameter] = params[this.page.keyParameter]
         this.$router.push(Object.assign({}, action.target, {
-          query: Object.assign({}, action.target.query, routerObj.query),
-          params: Object.assign({}, action.target.params, routerObj.params)
+          query: Object.assign(keyObject, routerObj.query, action.target.query),
+          params: Object.assign({}, routerObj.params, action.target.params)
         }))
       } else if (action.type === 'api') {
-        if (!this.verify()) {
+        // api调用操作
+        if (type === 'filterAction' && !this.verifyFilters()) {
           return
         }
         this.loading = true
         let option = {
           method: action.apiParams?.method || 'post'
         }
-        let finalTarget = this.fixApiTarget(action.target, params)
-        customQuery(finalTarget, params, option).then(data => {
+        let finalTarget = bizUtil.fixApiTarget(action.target, params)
+        customQuery(finalTarget, params, option).then(res => {
           this.loading = false
-          if (data && data[system.codeParam] === system.okCode) {
+          if (res && res[system.codeParam] === system.okCode) {
             // 成功
             if (action.successCallback) {
-              action.successCallback(data, this)
+              action.successCallback(res, this)
             }
           } else {
             // 业务码错误
             this.$message({
-              message: `${data && data[system.msgParam]}[${data && data[system.codeParam]}]`,
+              message: `${res && res[system.msgParam]}[${res && res[system.codeParam]}]`,
               type: 'error'
             })
           }
@@ -464,115 +464,35 @@ export default {
             type: 'error'
           })
         })
+      } else if (action.type === 'custom' && action.action) {
+        // 自定义操作
+        action.action(params, this)
       }
     },
-    handleTableAction (e, action, row) {
-      if (action.confirm) {
-        // 需要确认弹框
-        eventBus.$emit('notifyShowPopover', {
-          x: e.clientX || 0,
-          y: e.clientY || 0,
-          popMsg: action.confirm.confirmMsg(row, this),
-          confirmType: action.confirm.confirmType || 'primary',
-          callback: () => {
-            this.proceedTableAction(action, row)
-          }
-        })
-      } else {
-        // 无需弹框确认
-        this.proceedTableAction(action, row)
-      }
-    },
-    proceedTableAction (action, row) {
-      if (!action || !row) {
-        return
-      }
-      let params = {
-        bizPageId: this.page.bizPageId
-      }
-      if (action.paramsFields?.length) {
-        // 指定参数
-        action.paramsFields.forEach(item => {
-          if (typeof (item) === 'string') {
-            // 直接指定的是字段名
-            params[item] = row[item]
-          } else {
-            // 对象类型的配置
-            params[item.as || item.parameter] = item.handler(row[item.parameter], this)
-          }
-        })
-      } else {
-        // 全量参数
-        params = Object.assign({}, params, row)
-      }
-      if (action.type === 'router') {
-        let routerObj = {
-          query: {},
-          params: {}
-        }
-        if (action.useQuery) {
-          // 使用query方式传递参数
-          routerObj.query = params
-        } else {
-          // 使用params方式传递参数
-          routerObj.params = params
-        }
-        this.$router.push(Object.assign({}, action.target, {
-          query: Object.assign({}, action.target.query, routerObj.query),
-          params: Object.assign({}, action.target.params, routerObj.params)
-        }))
-      } else if (action.type === 'api') {
-        this.loading = true
-        let option = {
-          method: action.apiParams?.method || 'post'
-        }
-        let finalTarget = this.fixApiTarget(action.target, params)
-        customQuery(finalTarget, params, option).then(data => {
-          this.loading = false
-          if (data && data[system.codeParam] === system.okCode) {
-            // 成功
-            if (action.successCallback) {
-              action.successCallback(data, this)
-            }
-          } else {
-            // 业务码错误
-            this.$message({
-              message: `${data && data[system.msgParam]}[${data && data[system.codeParam]}]`,
-              type: 'error'
-            })
-          }
-        }).catch(error => {
-          // 失败
-          console.error(error)
-          this.loading = false
-          this.$message({
-            message: `请求失败，请稍后重试(${error})`,
-            type: 'error'
-          })
-        })
-      }
-    },
-    verify () {
+    verifyFilters () {
       let result = true
       for (let i = 0; i < this.listPage.filters.length; i++) {
         const item = this.listPage.filters[i]
-        let value = item.trim && typeof (item.value) === 'string' ? item.value.trim() : item.value
-        if (item.required && !value) {
-          this.$message({
-            message: `请完善${item.label}`,
-            type: 'warning'
-          })
-          result = false
-          break
-        }
-        if (item.validate) {
-          let validateResult = item.validate(value, this.form, this)
-          if (validateResult) {
-            // 校验通过
-          } else {
-            // 校验不通过
+        if (!item.when || item.when(this.form, this.listPage.filters, this)) {
+          // NOTE 检验仅针对显示的筛选项。因为不显示的筛选项即使检验不通过，用户也没法修改其值
+          let value = item.trim && typeof (item.value) === 'string' ? item.value.trim() : item.value
+          if (item.required && !value) {
+            this.$message({
+              message: `请完善${item.label}`,
+              type: 'warning'
+            })
             result = false
             break
+          }
+          if (item.validate) {
+            let validateResult = item.validate(value, this.form, this)
+            if (validateResult) {
+              // 校验通过
+            } else {
+              // 校验不通过
+              result = false
+              break
+            }
           }
         }
       }
@@ -582,7 +502,7 @@ export default {
       if (this.loading) {
         return
       }
-      if (!this.verify()) {
+      if (!this.verifyFilters()) {
         return
       }
       let params = {
@@ -607,7 +527,7 @@ export default {
         if (data && data[system.codeParam] === system.okCode) {
           // 成功
           const raw = data.data || {}
-          const detail = this.digData(raw, system.dataWrapper) || {}
+          const detail = bizUtil.digData(raw, system.dataWrapper) || {}
           let list = detail.list || []
           if (this.listPage.isTreeTable) {
             list.forEach(item => {
@@ -617,12 +537,12 @@ export default {
               children: []
             }
             rootNode[this.page.keyParameter] = 0
-            let originalList = this.createTree(rootNode, list)
+            let originalList = bizUtil.createTree(rootNode, list, this.page.keyParameter)
             this.list = originalList.children || []
             if (['all', 'no'].includes(this.listPage.treeExpendMode)) {
               this.defaultExpands = []
             } else {
-              this.defaultExpands = this.list.map(item => item[this.page.keyParameter].toString())
+              this.defaultExpands = this.list.map(item => item[this.page.keyParameter]?.toString())
             }
           } else {
             this.list = list
@@ -659,58 +579,13 @@ export default {
       }
       return result
     },
-    // 初始value类型
-    getTypeValue (item) {
-      if ((item.type === 'select' && item.multiple) || item.type === 'cascader') {
-        return []
-      } else {
-        return ''
-      }
-    },
-    digData (data, fields = []) {
-      if (fields.length) {
-        // 有剩余参数，继续深入
-        if (Object.keys(data).includes(fields[0])) {
-          // 存在该字段
-          return this.digData(data[fields[0]], fields.slice(1))
-        } else {
-          // 不存在的字段
-          return undefined
-        }
-      } else {
-        // 无参数，返回
-        return data
-      }
-    },
-    createTree (node, list) {
-      list.forEach(ob => {
-        if (ob.parentId === node[this.page.keyParameter]) {
-          ob = this.createTree(ob, list)
-          node.children.push(ob)
-        }
-      })
-      return node
-    },
-    fixApiTarget (rawUrl = '', data = {}) {
-      // NOTE 目前设定动态的参数以{}包裹
-      let matches = rawUrl.match(/({[^{}]+})/g)
-      if (matches && matches.length) {
-        // 存在动态参数，将其替换为对应的数据
-        const keys = data ? Object.keys(data) : []
-        matches.forEach(m => {
-          const paramName = m.substring(1, m.length - 1).replace(/\s/g, '')
-          const replaceValue = keys.includes(paramName) ? data[paramName] : ''
-          rawUrl = rawUrl.replace(m, replaceValue)
-        })
-        return rawUrl
-      } else {
-        // 无动态参数
-        return rawUrl
-      }
+    getRowKey (row) {
+      // console.log(row, this.listPage.isTreeTable, this.page.keyParameter)
+      return (this.listPage.isTreeTable ? row[this.page.keyParameter] : null)
     }
   }
 }
 </script>
 
-<style lang="scss" scoped>
+<style scoped>
 </style>
