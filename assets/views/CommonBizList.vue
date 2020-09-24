@@ -114,6 +114,7 @@
             :label="item.label"
             :align="item.align || 'left'"
             :width="item.width || ''"
+            :sortable="Boolean(item.sortable)"
             :show-overflow-tooltip="true">
             <template slot-scope="scope">
               <span v-if="!item.type || item.type === 'text'">
@@ -130,6 +131,12 @@
                 <el-tag type="danger" size="mini" hit v-else-if="item.failStatus && item.failStatus.includes(scope.row[item.parameter])">{{ item.handler ? item.handler(scope.row[item.parameter], scope.row, this) : scope.row[item.parameter] }}</el-tag>
                 <el-tag type="info" size="mini" hit v-else>{{ item.handler ? item.handler(scope.row[item.parameter], scope.row, this) : scope.row[item.parameter] }}</el-tag>
               </span>
+              <el-link v-else-if="item.type === 'link'"
+                type="primary"
+                :href="scope.row[item.parameter]"
+                target="_blank">
+                {{ scope.row[item.parameter] }}
+              </el-link>
             </template>
           </el-table-column>
           <el-table-column
@@ -289,7 +296,7 @@ export default {
       listPage.tableActions = listPage.tableActions || []
       listPage.batchActions = listPage.batchActions || []
       async function queryOptions (item) {
-        item.options = await item.defaultOptions(query, this)
+        item.options = await item.defaultOptions(query, _this)
         // NOTE 因为数据层级太深的原因，异步获取后手动update确保视图更新
         _this.$forceUpdate()
       }

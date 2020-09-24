@@ -15,7 +15,7 @@
           v-for="(item, index) in editPage.fields"
           :key="index">
           <el-form-item
-            :class="[item.required && 'is-required']"
+            :class="[mode !== 'detail' && item.required && 'is-required']"
             :label="item.label">
             <!-- input类型 -->
             <el-input v-if="item.type === 'input'"
@@ -81,6 +81,10 @@
               :inactive-text="item.options[0].label"
               :disabled="mode === 'detail' || (item.edits && !item.edits.includes(mode)) || (item.disabled && Boolean(item.disabled(form, editPage.fields, this)))">
             </el-switch>
+            <!-- label类型 -->
+            <span v-else-if="item.type === 'label'">
+              {{ item.value }}
+            </span>
             <!-- TODO 支持其他类型 -->
           </el-form-item>
         </div>
@@ -240,7 +244,7 @@ export default {
       }
       // 处理初始值
       async function queryOptions (item) {
-        item.options = await item.defaultOptions(bizParams, this)
+        item.options = await item.defaultOptions(bizParams, _this)
         // NOTE 因为数据层级太深的原因，异步获取后手动update确保视图更新
         _this.$forceUpdate()
       }
@@ -315,11 +319,17 @@ export default {
         // 成功
         this.loading = false
         if (data && data[system.codeParam] === system.okCode) {
-          this.$message({
-            message: `${this.mode === 'edit' ? '编辑' : '添加'}成功`,
-            type: 'success'
-          })
-          this.$router.go(-1)
+          if (this.editPage.submit[`${this.mode}SuccessCallback`]) {
+            // 自定义回调
+            this.editPage.submit[`${this.mode}SuccessCallback`](data, this)
+          } else {
+            // 内置回调处理
+            this.$message({
+              message: `${this.mode === 'edit' ? '编辑' : '添加'}成功`,
+              type: 'success'
+            })
+            this.$router.go(-1)
+          }
         } else {
           this.$message({
             message: `${data && data[system.msgParam]} [${data && data[system.codeParam]}]`,
