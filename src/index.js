@@ -21,69 +21,6 @@ let isThorProject = true // 是否是Thor生成的工程
 const currentPath = path.resolve('./')
 let pathInfo = path.parse(currentPath)
 
-// const updateBiz = () => {
-//   // 更新
-//   Promise.all([updateService('utils', '所需支持'), updateService('views', '可配置化业务支持')]).then(() => {
-//     // 全部完成
-//     console.log(success(`可配置化业务已全部更新完成！`))
-//   }).catch(err => {
-//     console.error(error(err))
-//   })
-// }
-
-// const updateService = (service, serviceName) => new Promise((resolve, reject) => {
-//   fs.copy(`node_modules/thor-bizpage-update/assets/${service}/`, `src/${service}/`).then(() => {
-//     console.log(success(`${serviceName}已更新`))
-//     resolve()
-//   }).catch((err) => {
-//     console.error(error(err))
-//     reject(err)
-//   })
-// })
-
-// const addFeature = () => {
-//   // 新添加
-//   Promise.all([addService('models/', '配置文件'), addService('utils/', '所需utils支持'), addService('components/', '所需组件', { overwrite: false }), addService('EventBus.js', '事件主线', { overwrite: false }), addService('views/', '可配置化业务')]).then(() => {
-//     // 全部完成
-//     console.log(success(`可配置化业务服务已全部添加完成！`))
-//     console.log(`配置文件路径：${info('src/models/SystemConfig.js')}`)
-//     console.warn(warning(`请注意：由于存量工程背景情况不一，你需要自行配置一些其他内容`))
-//     console.log(`详情参考链接 ${info('http://172.16.3.100:8901/angle-fe/thor/-/blob/master/docs/%E5%AD%98%E9%87%8F%E5%B7%A5%E7%A8%8B%E6%B7%BB%E5%8A%A0%E5%8F%AF%E9%85%8D%E7%BD%AE%E5%8C%96%E5%85%AC%E5%85%B1%E4%B8%9A%E5%8A%A1%E6%9C%8D%E5%8A%A1%E9%A1%BB%E7%9F%A5.md')}`)
-//   }).catch(err => {
-//     console.error(error(err))
-//   })
-// }
-
-// const addService = (service, serviceName, options = {}) => new Promise((resolve, reject) => {
-//   if (service[service.length - 1] === '/') {
-//     // 文件夹添加
-//     fs.ensureDir(`src/${service}`).then(() => {
-//       // 确保有文件夹
-//       return fs.copy(`node_modules/thor-bizpage-update/assets/${service}`, `src/${service}`, options)
-//     }).then(() => {
-//       // 拷贝成功
-//       console.log(success(`${serviceName}已添加`))
-//       resolve()
-//     }).catch(err => {
-//       console.error(error(err))
-//       reject(err)
-//     })
-//   } else {
-//     // 文件添加
-//     fs.ensureFile(`src/${service}`).then(() => {
-//       // 确保有路径及文件
-//       return fs.copy(`node_modules/thor-bizpage-update/assets/${service}`, `src/${service}`)
-//     }).then(() => {
-//       // 拷贝成功
-//       console.log(success(`${serviceName}已添加`))
-//       resolve()
-//     }).catch(err => {
-//       console.error(error(err))
-//       reject(err)
-//     })
-//   }
-// })
-
 const proceed = () => {
   console.log(`当前工程：${info(pathInfo.name)}  状态：${isThorProject ? info('Thor工程') : warning('非Thor历史工程')}  路径：${info(currentPath)}`)
   if (isThorProject) {
@@ -128,10 +65,8 @@ const checkVersion = (addNew = false) => {
   let localVersion = JSON.parse(readFileContent('.thorconfig.json')).bizpageVersion
   let remoteVersion
   axios.get(remoteThorRepoBaseUrl + 'package.json').then(data => {
-    // console.log(data.data)
     if (data && data.status === 200) {
       // console.log(info('获得远程应答'))
-      // console.log(data.data)
       const result = data.data
       remoteVersion = result.version
       if (remoteVersion !== localVersion) {
@@ -187,7 +122,7 @@ const handleAdd = ({ remoteVersion }) => {
     console.log(success(`可配置化业务服务已全部添加完成！`))
     console.log(`配置文件路径：${info('src/models/SystemConfig.js')}`)
     console.warn(warning(`请注意：由于存量工程背景情况不一，你需要自行配置一些其他内容`))
-    console.log(`详情参考链接 ${info('http://172.16.3.100:8901/angle-fe/thor/-/blob/master/docs/%E5%AD%98%E9%87%8F%E5%B7%A5%E7%A8%8B%E6%B7%BB%E5%8A%A0%E5%8F%AF%E9%85%8D%E7%BD%AE%E5%8C%96%E5%85%AC%E5%85%B1%E4%B8%9A%E5%8A%A1%E6%9C%8D%E5%8A%A1%E9%A1%BB%E7%9F%A5.md')}`)
+    console.log(`详情参考链接 ${info('http://172.16.3.100:8901/dm-fast/dm-fast-docs/-/blob/master/frontend/%E5%AD%98%E9%87%8F%E5%B7%A5%E7%A8%8B%E6%B7%BB%E5%8A%A0%E5%8F%AF%E9%85%8D%E7%BD%AE%E5%8C%96%E5%85%AC%E5%85%B1%E4%B8%9A%E5%8A%A1%E6%9C%8D%E5%8A%A1%E9%A1%BB%E7%9F%A5.md')}`)
   }).catch(err => {
     console.log(error(err))
   })
@@ -237,10 +172,8 @@ const checkFmVersion = () => {
   let localVersion = JSON.parse(readFileContent('.thorconfig.json')).fmVersion || '0.0.0'
   let remoteVersion
   axios.get(remoteThorRepoBaseUrl + 'package.json').then(data => {
-    // console.log(data.data)
     if (data && data.status === 200) {
       // console.log(info('获得远程应答'))
-      // console.log(data.data)
       const result = data.data
       remoteVersion = result.fmVersion
       if (remoteVersion !== localVersion) {
@@ -262,33 +195,69 @@ const checkFmVersion = () => {
 const handleUpdateFm = ({ localVersion, remoteVersion }) => {
   console.log(`检测到新版本 ${warning(localVersion)} => ${info(remoteVersion)}`)
   console.log(`开始更新工程 ${info(pathInfo.name)} 的Thor框架基础`)
-  Promise.all([axios.get(remoteThorRepoBaseUrl + 'template/pc/vue.config.js'), axios.get(remoteThorRepoBaseUrl + 'template/pc/babel.config.js'), axios.get(remoteThorRepoBaseUrl + 'template/pc/_eslintignore'), axios.get(remoteThorRepoBaseUrl + 'template/pc/src/api/base.js'), axios.get(remoteThorRepoBaseUrl + 'template/pc/src/models/system.js'), axios.get(remoteThorRepoBaseUrl + 'template/pc/src/models/build.js')]).then(datas => {
+  Promise.all([
+    axios.get(remoteThorRepoBaseUrl + 'template/pc/vue.config.js'),
+    axios.get(remoteThorRepoBaseUrl + 'template/pc/babel.config.js'),
+    axios.get(remoteThorRepoBaseUrl + 'template/pc/_eslintignore'),
+    axios.get(remoteThorRepoBaseUrl + 'template/pc/src/api/base.js'),
+    axios.get(remoteThorRepoBaseUrl + 'template/pc/src/models/system.js'),
+    axios.get(remoteThorRepoBaseUrl + 'template/pc/src/models/build.js'),
+    axios.get(remoteThorRepoBaseUrl + 'template/pc/src/models/i18n/zh-cn.js'),
+    axios.get(remoteThorRepoBaseUrl + 'template/pc/src/models/i18n/en.js'),
+    axios.get(remoteThorRepoBaseUrl + 'template/pc/src/utils/CommonUtil.js'),
+    axios.get(remoteThorRepoBaseUrl + 'template/pc/src/utils/i18nUtil.js'),
+    axios.get(remoteThorRepoBaseUrl + 'template/pc/src/ctrls/SystemCtrl.js'),
+    axios.get(remoteThorRepoBaseUrl + 'template/pc/src/components/PopoverTooltip.vue'),
+    axios.get(remoteThorRepoBaseUrl + 'template/pc/src/components/LogoutPop.vue'),
+    axios.get(remoteThorRepoBaseUrl + 'template/pc/src/components/CommonWrapper.vue'),
+    axios.get(remoteThorRepoBaseUrl + 'template/pc/src/views/Intro.vue'),
+    axios.get(remoteThorRepoBaseUrl + 'template/pc/src/views/SSOLanding.vue'),
+    axios.get(remoteThorRepoBaseUrl + 'template/pc/src/views/ChangePin.vue'),
+    axios.get(remoteThorRepoBaseUrl + 'template/pc/src/views/role/AddEdit.vue')
+  ]).then(datas => {
     if (datas.some(item => !item || item.status !== 200)) {
       throw new Error('获取远程文件内容发生错误！')
     }
-    let [vueConfigData, babelConfigData, eslintignoreData, apiBaseData, systemData, buildData] = datas
+    let [vueConfigData, babelConfigData, eslintignoreData, apiBaseData, systemData, buildData, zhCnLang, enLang, commonUtilData, i18nUtilData, systemCtrlData, popoverTooltipComp, logoutPopComp, commonWrapperComp, introVue, ssoLandingVue, changePinVue, editRoleVue] = datas
     vueConfigData = vueConfigData.data
     babelConfigData = babelConfigData.data
     eslintignoreData = eslintignoreData.data
     apiBaseData = apiBaseData.data
     systemData = systemData.data
     buildData = buildData.data
+    zhCnLang = zhCnLang.data
+    enLang = enLang.data
+    commonUtilData = commonUtilData.data
+    i18nUtilData = i18nUtilData.data
+    systemCtrlData = systemCtrlData.data
+    popoverTooltipComp = popoverTooltipComp.data
+    logoutPopComp = logoutPopComp.data
+    commonWrapperComp = commonWrapperComp.data
+    introVue = introVue.data
+    ssoLandingVue = ssoLandingVue.data
+    changePinVue = changePinVue.data
+    editRoleVue = editRoleVue.data
+    // 直接覆盖原始文件
     fs.outputFileSync('vue.config.js', vueConfigData)
     fs.outputFileSync('babel.config.js', babelConfigData)
     fs.outputFileSync('.eslintignore', eslintignoreData)
     fs.outputFileSync('src/api/base.js', apiBaseData)
-    fs.access('src/models/system.js').then(() => {
-      let merged = walkMerge('src/models/system.js', systemData)
-      fs.outputFileSync('src/models/system.js', merged)
-    }).catch(() => {
-      fs.outputFileSync('src/models/system.js', systemData)
-    })
-    fs.access('src/models/build.js').then(() => {
-      let merged = walkMerge('src/models/build.js', buildData)
-      fs.outputFileSync('src/models/build.js', merged)
-    }).catch(() => {
-      fs.outputFileSync('src/models/build.js', buildData)
-    })
+    fs.outputFileSync('src/utils/CommonUtil.js', commonUtilData)
+    fs.outputFileSync('src/utils/i18nUtil.js', i18nUtilData)
+    fs.outputFileSync('src/ctrls/SystemCtrl.js', systemCtrlData)
+    fs.outputFileSync('src/components/PopoverTooltip.vue', popoverTooltipComp)
+    fs.outputFileSync('src/components/LogoutPop.vue', logoutPopComp)
+    fs.outputFileSync('src/components/CommonWrapper.vue', commonWrapperComp)
+    fs.outputFileSync('src/views/Intro.vue', introVue)
+    fs.outputFileSync('src/views/SSOLanding.vue', ssoLandingVue)
+    fs.outputFileSync('src/views/ChangePin.vue', changePinVue)
+    fs.outputFileSync('src/views/role/AddEdit.vue', editRoleVue)
+    // 没有则复制，有则合并更新
+    mergeOrNew('src/models/system.js', systemData)
+    mergeOrNew('src/models/build.js', buildData)
+    // 没有则复制，有则不处理
+    makeSureFile('src/models/i18n/zh-cn.js', zhCnLang)
+    makeSureFile('src/models/i18n/en.js', enLang)
     // 更新本地版本号
     let thorConfigContent = JSON.parse(readFileContent('.thorconfig.json'))
     thorConfigContent.fmVersion = remoteVersion
@@ -296,6 +265,21 @@ const handleUpdateFm = ({ localVersion, remoteVersion }) => {
     console.log(success(`Thor框架已更新完成！`))
   }).catch(err => {
     console.log(error(err))
+  })
+}
+
+const mergeOrNew = (path, newData) => {
+  fs.access(path).then(() => {
+    let merged = walkMerge(path, newData)
+    fs.outputFileSync(path, merged)
+  }).catch(() => {
+    fs.outputFileSync(path, newData)
+  })
+}
+
+const makeSureFile = (path, data) => {
+  fs.access(path).then(() => {}).catch(() => {
+    fs.outputFileSync(path, data)
   })
 }
 
