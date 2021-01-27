@@ -1,6 +1,9 @@
-# thor-bizpage-update
+# thor-updater
 
-This npm plugin provides ability of adding `Thor`'s configurable biz pages feature to existing project or updating it. More detail of [Thor](https://github.com/youngbeen/thor)
+This npm plugin provides ability of updating `Thor`. Which includes:
+* Updating `Thor` framework to your `Thor` project
+* Updating configurable biz service to your `Thor` project
+* Add configurable biz service to exist non-thor project
 
 ## How to use
 
@@ -8,3 +11,4 @@ Under a project root,
 
 1. If not installed, Run `npm i thor-bizpage-update --save-dev`
 2. Run `npx thor-bizpage-update`
+3. Follow the instructions

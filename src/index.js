@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 
 const axios = require('axios')
+const diff = require('diff')
 const fs = require('fs-extra')
 const path = require('path')
 const { prompt } = require('enquirer')
@@ -210,6 +211,7 @@ const handleUpdateFm = ({ localVersion, remoteVersion }) => {
     axios.get(remoteThorRepoBaseUrl + 'template/pc/vue.config.js'),
     axios.get(remoteThorRepoBaseUrl + 'template/pc/babel.config.js'),
     axios.get(remoteThorRepoBaseUrl + 'template/pc/_eslintignore'),
+    axios.get(remoteThorRepoBaseUrl + 'template/pc/src/main.js'),
     axios.get(remoteThorRepoBaseUrl + 'template/pc/src/api/base.js'),
     axios.get(remoteThorRepoBaseUrl + 'template/pc/src/models/system.js'),
     axios.get(remoteThorRepoBaseUrl + 'template/pc/src/models/build.js'),
@@ -218,10 +220,11 @@ const handleUpdateFm = ({ localVersion, remoteVersion }) => {
     axios.get(remoteThorRepoBaseUrl + 'template/pc/src/utils/CommonUtil.js'),
     axios.get(remoteThorRepoBaseUrl + 'template/pc/src/utils/i18nUtil.js'),
     axios.get(remoteThorRepoBaseUrl + 'template/pc/src/ctrls/SystemCtrl.js'),
+    axios.get(remoteThorRepoBaseUrl + 'template/pc/src/components/HeadBar.vue'),
     axios.get(remoteThorRepoBaseUrl + 'template/pc/src/components/PopoverTooltip.vue'),
     axios.get(remoteThorRepoBaseUrl + 'template/pc/src/components/LogoutPop.vue'),
     axios.get(remoteThorRepoBaseUrl + 'template/pc/src/components/CommonWrapper.vue'),
-    axios.get(remoteThorRepoBaseUrl + 'template/pc/src/views/Intro.vue'),
+    axios.get(remoteThorRepoBaseUrl + 'template/pc/src/views/Login.vue'),
     axios.get(remoteThorRepoBaseUrl + 'template/pc/src/views/SSOLanding.vue'),
     axios.get(remoteThorRepoBaseUrl + 'template/pc/src/views/ChangePin.vue'),
     axios.get(remoteThorRepoBaseUrl + 'template/pc/src/views/role/AddEdit.vue')
@@ -229,10 +232,11 @@ const handleUpdateFm = ({ localVersion, remoteVersion }) => {
     if (datas.some(item => !item || item.status !== 200)) {
       throw new Error('获取远程文件内容发生错误！')
     }
-    let [vueConfigData, babelConfigData, eslintignoreData, apiBaseData, systemData, buildData, zhCnLang, enLang, commonUtilData, i18nUtilData, systemCtrlData, popoverTooltipComp, logoutPopComp, commonWrapperComp, introVue, ssoLandingVue, changePinVue, editRoleVue] = datas
+    let [vueConfigData, babelConfigData, eslintignoreData, mainjsData, apiBaseData, systemData, buildData, zhCnLang, enLang, commonUtilData, i18nUtilData, systemCtrlData, headbarComp, popoverTooltipComp, logoutPopComp, commonWrapperComp, loginVue, ssoLandingVue, changePinVue, editRoleVue] = datas
     vueConfigData = vueConfigData.data
     babelConfigData = babelConfigData.data
     eslintignoreData = eslintignoreData.data
+    mainjsData = mainjsData.data
     apiBaseData = apiBaseData.data
     systemData = systemData.data
     buildData = buildData.data
@@ -241,31 +245,34 @@ const handleUpdateFm = ({ localVersion, remoteVersion }) => {
     commonUtilData = commonUtilData.data
     i18nUtilData = i18nUtilData.data
     systemCtrlData = systemCtrlData.data
+    headbarComp = headbarComp.data
     popoverTooltipComp = popoverTooltipComp.data
     logoutPopComp = logoutPopComp.data
     commonWrapperComp = commonWrapperComp.data
-    introVue = introVue.data
+    loginVue = loginVue.data
     ssoLandingVue = ssoLandingVue.data
     changePinVue = changePinVue.data
     editRoleVue = editRoleVue.data
     // 直接覆盖原始文件
-    fs.outputFileSync('vue.config.js', vueConfigData)
     fs.outputFileSync('babel.config.js', babelConfigData)
     fs.outputFileSync('.eslintignore', eslintignoreData)
-    fs.outputFileSync('src/api/base.js', apiBaseData)
     fs.outputFileSync('src/utils/CommonUtil.js', commonUtilData)
     fs.outputFileSync('src/utils/i18nUtil.js', i18nUtilData)
-    fs.outputFileSync('src/ctrls/SystemCtrl.js', systemCtrlData)
     fs.outputFileSync('src/components/PopoverTooltip.vue', popoverTooltipComp)
     fs.outputFileSync('src/components/LogoutPop.vue', logoutPopComp)
     fs.outputFileSync('src/components/CommonWrapper.vue', commonWrapperComp)
-    fs.outputFileSync('src/views/Intro.vue', introVue)
     fs.outputFileSync('src/views/SSOLanding.vue', ssoLandingVue)
     fs.outputFileSync('src/views/ChangePin.vue', changePinVue)
     fs.outputFileSync('src/views/role/AddEdit.vue', editRoleVue)
     // 没有则复制，有则合并更新
+    mergeOrNew('vue.config.js', vueConfigData)
+    mergeOrNew('src/main.js', mainjsData)
+    mergeOrNew('src/api/base.js', apiBaseData)
     mergeOrNew('src/models/system.js', systemData)
     mergeOrNew('src/models/build.js', buildData)
+    mergeOrNew('src/ctrls/SystemCtrl.js', systemCtrlData)
+    mergeOrNew('src/components/HeadBar.vue', headbarComp)
+    mergeOrNew('src/views/Login.vue', loginVue)
     // 没有则复制，有则不处理
     makeSureFile('src/models/i18n/zh-cn.js', zhCnLang)
     makeSureFile('src/models/i18n/en.js', enLang)
@@ -281,8 +288,11 @@ const handleUpdateFm = ({ localVersion, remoteVersion }) => {
 
 const mergeOrNew = (path, newData) => {
   fs.access(path).then(() => {
-    let merged = walkMerge(path, newData)
-    fs.outputFileSync(path, merged)
+    let result = walkMerge(path, newData)
+    if (result.count) {
+      console.log(`${info(path)} 中有 ${warning(result.count)} 处合并冲突，搜索关键字“${info('==START==')}”和“${info('==END==')}”来定位冲突`)
+    }
+    fs.outputFileSync(path, result.value)
   }).catch(() => {
     fs.outputFileSync(path, newData)
   })
@@ -296,47 +306,40 @@ const makeSureFile = (path, data) => {
 
 const walkMerge = (originalFilePath, newContent) => {
   const oriContent = readFileContent(originalFilePath)
-  const oriRows = oriContent.split('\n')
-  const newRows = newContent.split('\n')
-  let mergedRows = []
-  let j = 0
-  for (let i = 0; i < newRows.length; i++) {
-    const newRow = newRows[i]
-    let oriRow = oriRows[j]
-    if (newRow === oriRow) {
-      // 相同行
-      // console.log('相同行', oriRow)
-      mergedRows.push(oriRow)
-      j++
+  const diffs = diff.diffLines(oriContent, newContent)
+  let merged = ''
+  let count = 0
+  diffs.forEach((d) => {
+    if (d.removed) {
+      count++
+      merged += `// ==START== TODO ${count} 你编辑过的内容\n${d.value}// ==END== 你编辑过的内容\n`
     } else {
-      // 不同行
-      if (newRow.indexOf(': ') > -1 && oriRow.indexOf(': ') > -1 && newRow.split(': ')[0] === oriRow.split(': ')[0]) {
-        // 相同key，但是内容不一样的行，保留用户编辑的行内容
-        // console.log('同key，不同内容', newRow, oriRow)
-        mergedRows.push(oriRow)
-        j++
-      } else {
-        // 其他情况则认定为添加的新行
-        // console.log('全新行', newRow, oriRow)
-        mergedRows.push(newRow)
-      }
+      merged += d.value
     }
+  })
+  return {
+    count,
+    value: merged
   }
-  if (j < oriRows.length) {
-    // 仍然有未匹配完的旧项，全部推入
-    mergedRows = [...mergedRows, ...oriRows.slice(j)]
-  }
-  // console.log('最终merge结果', mergedRows.join('\n'))
-  return mergedRows.join('\n')
 }
 
-fs.access('src/models/SystemConfig.js').then(() => {
-  // 工程存在配置文件
-  isThorProject = true
-  proceed()
-}).catch(() => {
-  // 工程不存在配置文件
-  // console.error(err)
-  isThorProject = false
-  proceed()
+prompt([
+  {
+    type: 'confirm',
+    name: 'proceed',
+    message: '建议在使用更新插件前，先提交代码。是否继续执行更新操作？'
+  }
+]).then(res => {
+  if (res && res.proceed) {
+    fs.access('src/models/SystemConfig.js').then(() => {
+      // 工程存在配置文件
+      isThorProject = true
+      proceed()
+    }).catch(() => {
+      // 工程不存在配置文件
+      // console.error(err)
+      isThorProject = false
+      proceed()
+    })
+  }
 })
