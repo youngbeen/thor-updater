@@ -75,7 +75,7 @@ const checkVersion = (addNew = false) => {
       } else {
         // 同版本
         console.log(`当前可配置化服务版本已最新 (${info(localVersion)})`)
-        tryUpdateFm()
+        isThorProject && tryUpdateFm()
       }
     }
   }).catch(err => {
@@ -86,7 +86,14 @@ const checkVersion = (addNew = false) => {
 const handleAdd = ({ remoteVersion }) => {
   console.log(`最新版本 ${info(remoteVersion)}`)
   console.log(`开始更新工程 ${info(pathInfo.name)} 的可配置化业务`)
-  Promise.all([axios.get(remoteThorRepoBaseUrl + 'template/pc/src/EventBus.js'), axios.get(remoteThorRepoBaseUrl + 'template/pc/src/models/SystemConfig.js'), axios.get(remoteThorRepoBaseUrl + 'template/pc/src/components/PopoverTooltip.vue'), axios.get(remoteThorRepoBaseUrl + 'template/pc/src/utils/CommonBizUtil.js'), axios.get(remoteThorRepoBaseUrl + 'template/pc/src/views/CommonBizList.vue'), axios.get(remoteThorRepoBaseUrl + 'template/pc/src/views/CommonBizEdit.vue')]).then(datas => {
+  Promise.all([
+    axios.get(remoteThorRepoBaseUrl + 'template/pc/src/EventBus.js'),
+    axios.get(remoteThorRepoBaseUrl + 'template/pc/src/models/SystemConfig.js'),
+    axios.get(remoteThorRepoBaseUrl + 'template/pc/src/components/PopoverTooltip.vue'),
+    axios.get(remoteThorRepoBaseUrl + 'template/pc/src/utils/CommonBizUtil.js'),
+    axios.get(remoteThorRepoBaseUrl + 'template/pc/src/views/CommonBizList.vue'),
+    axios.get(remoteThorRepoBaseUrl + 'template/pc/src/views/CommonBizEdit.vue')
+  ]).then(datas => {
     if (datas.some(item => !item || item.status !== 200)) {
       throw new Error('获取远程文件内容发生错误！')
     }
@@ -131,7 +138,11 @@ const handleAdd = ({ remoteVersion }) => {
 const handleUpdate = ({ localVersion, remoteVersion }) => {
   console.log(`检测到新版本 ${warning(localVersion)} => ${info(remoteVersion)}`)
   console.log(`开始更新工程 ${info(pathInfo.name)} 的可配置化业务`)
-  Promise.all([axios.get(remoteThorRepoBaseUrl + 'template/pc/src/utils/CommonBizUtil.js'), axios.get(remoteThorRepoBaseUrl + 'template/pc/src/views/CommonBizList.vue'), axios.get(remoteThorRepoBaseUrl + 'template/pc/src/views/CommonBizEdit.vue')]).then(datas => {
+  Promise.all([
+    axios.get(remoteThorRepoBaseUrl + 'template/pc/src/utils/CommonBizUtil.js'),
+    axios.get(remoteThorRepoBaseUrl + 'template/pc/src/views/CommonBizList.vue'),
+    axios.get(remoteThorRepoBaseUrl + 'template/pc/src/views/CommonBizEdit.vue')
+  ]).then(datas => {
     if (datas.some(item => !item || item.status !== 200)) {
       throw new Error('获取远程文件内容发生错误！')
     }
@@ -147,7 +158,7 @@ const handleUpdate = ({ localVersion, remoteVersion }) => {
     thorConfigContent.bizpageVersion = remoteVersion
     fs.outputFileSync('.thorconfig.json', JSON.stringify(thorConfigContent))
     console.log(success(`可配置化服务已更新完成！`))
-    tryUpdateFm()
+    isThorProject && tryUpdateFm()
   }).catch(err => {
     console.log(error(err))
   })
