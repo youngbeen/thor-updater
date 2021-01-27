@@ -22,7 +22,7 @@ const currentPath = path.resolve('./')
 let pathInfo = path.parse(currentPath)
 
 const proceed = () => {
-  console.log(`当前工程：${info(pathInfo.name)}  状态：${isThorProject ? info('Thor工程') : warning('非Thor历史工程')}  路径：${info(currentPath)}`)
+  console.log(`当前工程：${info(pathInfo.name)}  状态：${isThorProject ? info('Thor工程') : warning('其他工程')}  路径：${info(currentPath)}`)
   if (isThorProject) {
     // thor工程，只更新可配置化业务文件
     proceedUpdate()
@@ -74,7 +74,7 @@ const checkVersion = (addNew = false) => {
         addNew ? handleAdd({ remoteVersion }) : handleUpdate({ localVersion, remoteVersion })
       } else {
         // 同版本
-        console.log(`当前可配置化服务版本已最新 (${info(localVersion)})`)
+        console.log(`当前可配置化服务版本已是最新 (${info(localVersion)})`)
         isThorProject && tryUpdateFm()
       }
     }
@@ -85,7 +85,7 @@ const checkVersion = (addNew = false) => {
 
 const handleAdd = ({ remoteVersion }) => {
   console.log(`最新版本 ${info(remoteVersion)}`)
-  console.log(`开始更新工程 ${info(pathInfo.name)} 的可配置化业务`)
+  console.log(`开始为工程 ${info(pathInfo.name)} 更新可配置化业务`)
   Promise.all([
     axios.get(remoteThorRepoBaseUrl + 'template/pc/src/EventBus.js'),
     axios.get(remoteThorRepoBaseUrl + 'template/pc/src/models/SystemConfig.js'),
@@ -129,7 +129,7 @@ const handleAdd = ({ remoteVersion }) => {
     console.log(success(`可配置化业务服务已全部添加完成！`))
     console.log(`配置文件路径：${info('src/models/SystemConfig.js')}`)
     console.warn(warning(`请注意：由于存量工程背景情况不一，你需要自行配置一些其他内容`))
-    console.log(`详情参考链接 ${info('http://172.16.3.100:8901/dm-fast/dm-fast-docs/-/blob/master/frontend/%E5%AD%98%E9%87%8F%E5%B7%A5%E7%A8%8B%E6%B7%BB%E5%8A%A0%E5%8F%AF%E9%85%8D%E7%BD%AE%E5%8C%96%E5%85%AC%E5%85%B1%E4%B8%9A%E5%8A%A1%E6%9C%8D%E5%8A%A1%E9%A1%BB%E7%9F%A5.md')}`)
+    console.log(`详情链接 ${info('http://172.16.3.100:8901/dm-fast/dm-fast-docs/-/blob/master/frontend/%E5%AD%98%E9%87%8F%E5%B7%A5%E7%A8%8B%E6%B7%BB%E5%8A%A0%E5%8F%AF%E9%85%8D%E7%BD%AE%E5%8C%96%E5%85%AC%E5%85%B1%E4%B8%9A%E5%8A%A1%E6%9C%8D%E5%8A%A1%E9%A1%BB%E7%9F%A5.md')}`)
   }).catch(err => {
     console.log(error(err))
   })
@@ -137,7 +137,7 @@ const handleAdd = ({ remoteVersion }) => {
 
 const handleUpdate = ({ localVersion, remoteVersion }) => {
   console.log(`检测到新版本 ${warning(localVersion)} => ${info(remoteVersion)}`)
-  console.log(`开始更新工程 ${info(pathInfo.name)} 的可配置化业务`)
+  console.log(`开始为工程 ${info(pathInfo.name)} 更新可配置化业务`)
   Promise.all([
     axios.get(remoteThorRepoBaseUrl + 'template/pc/src/utils/CommonBizUtil.js'),
     axios.get(remoteThorRepoBaseUrl + 'template/pc/src/views/CommonBizList.vue'),
@@ -179,7 +179,7 @@ const tryUpdateFm = () => {
 }
 
 const checkFmVersion = () => {
-  console.log('检查Thor版本...')
+  console.log('检查框架版本...')
   let localVersion = JSON.parse(readFileContent('.thorconfig.json')).fmVersion || '0.0.0'
   let remoteVersion
   axios.get(remoteThorRepoBaseUrl + 'package.json').then(data => {
@@ -195,7 +195,7 @@ const checkFmVersion = () => {
         })
       } else {
         // 同版本
-        console.log(`当前Thor框架版本已最新 (${info(localVersion)})`)
+        console.log(`当前框架版本已是最新 (${info(localVersion)})`)
       }
     }
   }).catch(err => {
@@ -205,7 +205,7 @@ const checkFmVersion = () => {
 
 const handleUpdateFm = ({ localVersion, remoteVersion }) => {
   console.log(`检测到新版本 ${warning(localVersion)} => ${info(remoteVersion)}`)
-  console.log(`开始更新工程 ${info(pathInfo.name)} 的Thor框架基础`)
+  console.log(`开始为工程 ${info(pathInfo.name)} 更新框架`)
   Promise.all([
     axios.get(remoteThorRepoBaseUrl + 'template/pc/vue.config.js'),
     axios.get(remoteThorRepoBaseUrl + 'template/pc/babel.config.js'),
@@ -273,7 +273,7 @@ const handleUpdateFm = ({ localVersion, remoteVersion }) => {
     let thorConfigContent = JSON.parse(readFileContent('.thorconfig.json'))
     thorConfigContent.fmVersion = remoteVersion
     fs.outputFileSync('.thorconfig.json', JSON.stringify(thorConfigContent))
-    console.log(success(`Thor框架已更新完成！`))
+    console.log(success(`框架已更新完成！`))
   }).catch(err => {
     console.log(error(err))
   })
