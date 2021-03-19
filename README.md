@@ -9,6 +9,6 @@ This npm plugin provides ability of updating `Thor`. Which includes:
 
 Under a project root,
 
-1. If not installed, Run `npm i thor-bizpage-update --save-dev`
-2. Run `npx thor-bizpage-update`
+1. If not installed, Run `npm i thor-updater --save-dev`
+2. Run `npx thor-updater`
 3. Follow the instructions

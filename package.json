@@ -1,6 +1,6 @@
 {
   "name": "thor-updater",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Add, update Thor's configurable biz service and framework",
   "bin": {
     "thor-update": "src/index.js"

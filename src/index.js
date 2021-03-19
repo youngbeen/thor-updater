@@ -115,6 +115,7 @@ const handleAdd = ({ remoteVersion }) => {
     } catch (err) {
       fs.outputFileSync('src/models/SystemConfig.js', systemConfigData)
     }
+    fs.ensureDir('src/models/bizconfig/')
     try {
       fs.accessSync('src/components/PopoverTooltip.vue')
     } catch (err) {
@@ -151,6 +152,7 @@ const handleUpdate = ({ localVersion, remoteVersion }) => {
     utilData = utilData.data
     listVueData = listVueData.data
     editVueData = editVueData.data
+    fs.ensureDir('src/models/bizconfig/')
     fs.outputFileSync('src/utils/CommonBizUtil.js', utilData)
     fs.outputFileSync('src/views/CommonBizList.vue', listVueData)
     fs.outputFileSync('src/views/CommonBizEdit.vue', editVueData)
@@ -224,6 +226,7 @@ const handleUpdateFm = ({ localVersion, remoteVersion }) => {
     axios.get(remoteThorRepoBaseUrl + 'template/pc/src/components/PopoverTooltip.vue'),
     axios.get(remoteThorRepoBaseUrl + 'template/pc/src/components/LogoutPop.vue'),
     axios.get(remoteThorRepoBaseUrl + 'template/pc/src/components/CommonWrapper.vue'),
+    axios.get(remoteThorRepoBaseUrl + 'template/pc/src/components/PageTab.vue'),
     axios.get(remoteThorRepoBaseUrl + 'template/pc/src/views/Login.vue'),
     axios.get(remoteThorRepoBaseUrl + 'template/pc/src/views/SSOLanding.vue'),
     axios.get(remoteThorRepoBaseUrl + 'template/pc/src/views/ChangePin.vue'),
@@ -232,7 +235,7 @@ const handleUpdateFm = ({ localVersion, remoteVersion }) => {
     if (datas.some(item => !item || item.status !== 200)) {
       throw new Error('获取远程文件内容发生错误！')
     }
-    let [vueConfigData, babelConfigData, eslintignoreData, mainjsData, apiBaseData, systemData, buildData, zhCnLang, enLang, commonUtilData, i18nUtilData, systemCtrlData, headbarComp, popoverTooltipComp, logoutPopComp, commonWrapperComp, loginVue, ssoLandingVue, changePinVue, editRoleVue] = datas
+    let [vueConfigData, babelConfigData, eslintignoreData, mainjsData, apiBaseData, systemData, buildData, zhCnLang, enLang, commonUtilData, i18nUtilData, systemCtrlData, headbarComp, popoverTooltipComp, logoutPopComp, commonWrapperComp, pageTabComp, loginVue, ssoLandingVue, changePinVue, editRoleVue] = datas
     vueConfigData = vueConfigData.data
     babelConfigData = babelConfigData.data
     eslintignoreData = eslintignoreData.data
@@ -249,6 +252,7 @@ const handleUpdateFm = ({ localVersion, remoteVersion }) => {
     popoverTooltipComp = popoverTooltipComp.data
     logoutPopComp = logoutPopComp.data
     commonWrapperComp = commonWrapperComp.data
+    pageTabComp = pageTabComp.data
     loginVue = loginVue.data
     ssoLandingVue = ssoLandingVue.data
     changePinVue = changePinVue.data
@@ -261,6 +265,7 @@ const handleUpdateFm = ({ localVersion, remoteVersion }) => {
     fs.outputFileSync('src/components/PopoverTooltip.vue', popoverTooltipComp)
     fs.outputFileSync('src/components/LogoutPop.vue', logoutPopComp)
     fs.outputFileSync('src/components/CommonWrapper.vue', commonWrapperComp)
+    fs.outputFileSync('src/components/PageTab.vue', pageTabComp)
     fs.outputFileSync('src/views/SSOLanding.vue', ssoLandingVue)
     fs.outputFileSync('src/views/ChangePin.vue', changePinVue)
     fs.outputFileSync('src/views/role/AddEdit.vue', editRoleVue)
