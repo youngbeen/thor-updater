@@ -91,6 +91,7 @@ const handleAdd = ({ remoteVersion }) => {
     axios.get(remoteThorRepoBaseUrl + 'template/pc/src/EventBus.js'),
     axios.get(remoteThorRepoBaseUrl + 'template/pc/src/models/SystemConfig.js'),
     axios.get(remoteThorRepoBaseUrl + 'template/pc/src/components/PopoverTooltip.vue'),
+    axios.get(remoteThorRepoBaseUrl + 'template/pc/src/components/EmbedCommonBizEdit.vue'),
     axios.get(remoteThorRepoBaseUrl + 'template/pc/src/utils/CommonBizUtil.js'),
     axios.get(remoteThorRepoBaseUrl + 'template/pc/src/views/CommonBizList.vue'),
     axios.get(remoteThorRepoBaseUrl + 'template/pc/src/views/CommonBizEdit.vue')
@@ -98,10 +99,11 @@ const handleAdd = ({ remoteVersion }) => {
     if (datas.some(item => !item || item.status !== 200)) {
       throw new Error('获取远程文件内容发生错误！')
     }
-    let [eventBusData, systemConfigData, popoverTooltipVueData, utilData, listVueData, editVueData] = datas
+    let [eventBusData, systemConfigData, popoverTooltipVueData, embedCommonBizEditVueData, utilData, listVueData, editVueData] = datas
     eventBusData = eventBusData.data
     systemConfigData = systemConfigData.data
     popoverTooltipVueData = popoverTooltipVueData.data
+    embedCommonBizEditVueData = embedCommonBizEditVueData.data
     utilData = utilData.data
     listVueData = listVueData.data
     editVueData = editVueData.data
@@ -121,6 +123,7 @@ const handleAdd = ({ remoteVersion }) => {
     } catch (err) {
       fs.outputFileSync('src/components/PopoverTooltip.vue', popoverTooltipVueData)
     }
+    fs.outputFileSync('src/components/EmbedCommonBizEdit.vue', embedCommonBizEditVueData)
     fs.outputFileSync('src/utils/CommonBizUtil.js', utilData)
     fs.outputFileSync('src/views/CommonBizList.vue', listVueData)
     fs.outputFileSync('src/views/CommonBizEdit.vue', editVueData)
@@ -142,18 +145,21 @@ const handleUpdate = ({ localVersion, remoteVersion }) => {
   console.log(`开始为工程 ${info(pathInfo.name)} 更新可配置化业务`)
   Promise.all([
     axios.get(remoteThorRepoBaseUrl + 'template/pc/src/utils/CommonBizUtil.js'),
+    axios.get(remoteThorRepoBaseUrl + 'template/pc/src/components/EmbedCommonBizEdit.vue'),
     axios.get(remoteThorRepoBaseUrl + 'template/pc/src/views/CommonBizList.vue'),
     axios.get(remoteThorRepoBaseUrl + 'template/pc/src/views/CommonBizEdit.vue')
   ]).then(datas => {
     if (datas.some(item => !item || item.status !== 200)) {
       throw new Error('获取远程文件内容发生错误！')
     }
-    let [utilData, listVueData, editVueData] = datas
+    let [utilData, embedEditCompData, listVueData, editVueData] = datas
     utilData = utilData.data
+    embedEditCompData = embedEditCompData.data
     listVueData = listVueData.data
     editVueData = editVueData.data
     fs.ensureDir('src/models/bizconfig/')
     fs.outputFileSync('src/utils/CommonBizUtil.js', utilData)
+    fs.outputFileSync('src/components/EmbedCommonBizEdit.vue', embedEditCompData)
     fs.outputFileSync('src/views/CommonBizList.vue', listVueData)
     fs.outputFileSync('src/views/CommonBizEdit.vue', editVueData)
     // 更新本地版本号
