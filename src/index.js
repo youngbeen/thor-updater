@@ -225,6 +225,7 @@ const handleUpdateFm = ({ localVersion, remoteVersion }) => {
     axios.get(remoteThorRepoBaseUrl + 'template/pc/src/models/build.js'),
     axios.get(remoteThorRepoBaseUrl + 'template/pc/src/models/i18n/zh-cn.js'),
     axios.get(remoteThorRepoBaseUrl + 'template/pc/src/models/i18n/en.js'),
+    axios.get(remoteThorRepoBaseUrl + 'template/pc/src/directives/resizeTableColumn.js'),
     axios.get(remoteThorRepoBaseUrl + 'template/pc/src/utils/CommonUtil.js'),
     axios.get(remoteThorRepoBaseUrl + 'template/pc/src/utils/i18nUtil.js'),
     axios.get(remoteThorRepoBaseUrl + 'template/pc/src/ctrls/SystemCtrl.js'),
@@ -241,7 +242,7 @@ const handleUpdateFm = ({ localVersion, remoteVersion }) => {
     if (datas.some(item => !item || item.status !== 200)) {
       throw new Error('获取远程文件内容发生错误！')
     }
-    let [vueConfigData, babelConfigData, eslintignoreData, mainjsData, apiBaseData, systemData, buildData, zhCnLang, enLang, commonUtilData, i18nUtilData, systemCtrlData, headbarComp, popoverTooltipComp, logoutPopComp, commonWrapperComp, pageTabComp, loginVue, ssoLandingVue, changePinVue, editRoleVue] = datas
+    let [vueConfigData, babelConfigData, eslintignoreData, mainjsData, apiBaseData, systemData, buildData, zhCnLang, enLang, resizeTableColumnDirective, commonUtilData, i18nUtilData, systemCtrlData, headbarComp, popoverTooltipComp, logoutPopComp, commonWrapperComp, pageTabComp, loginVue, ssoLandingVue, changePinVue, editRoleVue] = datas
     vueConfigData = vueConfigData.data
     babelConfigData = babelConfigData.data
     eslintignoreData = eslintignoreData.data
@@ -251,6 +252,7 @@ const handleUpdateFm = ({ localVersion, remoteVersion }) => {
     buildData = buildData.data
     zhCnLang = zhCnLang.data
     enLang = enLang.data
+    resizeTableColumnDirective = resizeTableColumnDirective.data
     commonUtilData = commonUtilData.data
     i18nUtilData = i18nUtilData.data
     systemCtrlData = systemCtrlData.data
@@ -266,6 +268,7 @@ const handleUpdateFm = ({ localVersion, remoteVersion }) => {
     // 直接覆盖原始文件
     fs.outputFileSync('babel.config.js', babelConfigData)
     fs.outputFileSync('.eslintignore', eslintignoreData)
+    fs.outputFileSync('src/directives/resizeTableColumn.js', resizeTableColumnDirective)
     fs.outputFileSync('src/utils/CommonUtil.js', commonUtilData)
     fs.outputFileSync('src/utils/i18nUtil.js', i18nUtilData)
     fs.outputFileSync('src/components/PopoverTooltip.vue', popoverTooltipComp)

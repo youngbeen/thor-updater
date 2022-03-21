@@ -27,6 +27,7 @@
 * `template/pc/src/models/build.js` - 无则复制，有则合并
 * `template/pc/src/models/i18n/zh-cn.js` - 有则不处理，无则复制
 * `template/pc/src/models/i18n/en.js` - 有则不处理，无则复制
+* `template/pc/src/directives/resizeTableColumn.js` - 覆盖
 * `template/pc/src/utils/CommonUtil.js` - 覆盖
 * `template/pc/src/utils/i18nUtil.js` - 覆盖
 * `template/pc/src/ctrls/SystemCtrl.js` - 无则复制，有则合并
