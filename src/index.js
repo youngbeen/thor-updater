@@ -18,6 +18,7 @@ const error = style.red.bold
 const remoteThorRepoBaseUrl = 'http://172.16.3.100:8901/angle-fe/thor/-/raw/master/'
 
 let isThorProject = true // 是否是Thor生成的工程
+let operator = '' // 当前操作人
 
 const currentPath = path.resolve('./')
 let pathInfo = path.parse(currentPath)
@@ -41,6 +42,9 @@ const proceedUpdate = () => {
     checkVersion()
   }).catch(() => {
     let content = JSON.stringify({
+      projectName: '',
+      projectType: '',
+      author: '',
       bizpageVersion: '0.0.0',
       fmVersion: '0.0.0'
     })
@@ -53,6 +57,9 @@ const proceedUpdate = () => {
 
 const proceedAdd = () => {
   let content = JSON.stringify({
+    projectName: '',
+    projectType: '',
+    author: '',
     bizpageVersion: '0.0.0',
     fmVersion: '0.0.0'
   })
@@ -134,7 +141,7 @@ const handleAdd = ({ remoteVersion }) => {
     console.log(success(`可配置化业务服务已全部添加完成！`))
     console.log(`配置文件路径：${info('src/models/SystemConfig.js')}`)
     console.warn(warning(`请注意：由于存量工程背景情况不一，你需要自行配置一些其他内容`))
-    console.log(`详情链接 ${info('http://172.16.3.100:8901/dm-fast/dm-fast-docs/-/blob/master/frontend/%E5%AD%98%E9%87%8F%E5%B7%A5%E7%A8%8B%E6%B7%BB%E5%8A%A0%E5%8F%AF%E9%85%8D%E7%BD%AE%E5%8C%96%E5%85%AC%E5%85%B1%E4%B8%9A%E5%8A%A1%E6%9C%8D%E5%8A%A1%E9%A1%BB%E7%9F%A5.md')}`)
+    console.log(`详情链接 ${info('http://10.11.118.52:8085/his-docs/guide/frontend/存量工程添加可配置化公共业务服务须知.html')}`)
   }).catch(err => {
     console.log(error(err))
   })
@@ -183,6 +190,8 @@ const tryUpdateFm = () => {
   ]).then(res => {
     if (res && res.updateFm) {
       checkFmVersion()
+    } else {
+      logProjectInfo()
     }
   })
 }
@@ -205,10 +214,12 @@ const checkFmVersion = () => {
       } else {
         // 同版本
         console.log(`当前框架版本已是最新 (${info(localVersion)})`)
+        logProjectInfo()
       }
     }
   }).catch(err => {
     console.log(error(err))
+    logProjectInfo()
   })
 }
 
@@ -295,8 +306,32 @@ const handleUpdateFm = ({ localVersion, remoteVersion }) => {
     thorConfigContent.fmVersion = remoteVersion
     fs.outputFileSync('.thorconfig.json', JSON.stringify(thorConfigContent))
     console.log(success(`框架已更新完成！`))
+    logProjectInfo()
   }).catch(err => {
     console.log(error(err))
+    logProjectInfo()
+  })
+}
+
+const logProjectInfo = async () => {
+  const thorConfigContent = JSON.parse(readFileContent('.thorconfig.json'))
+  let projectInfo = {
+    projectName: thorConfigContent.projectName || '',
+    projectType: thorConfigContent.projectType || '',
+    frameworkVersion: thorConfigContent.fmVersion || '',
+    configBizVersion: thorConfigContent.bizpageVersion || '',
+    operator,
+    operationType: 'upgrade'
+  }
+  projectInfo.extraInfo = JSON.stringify(projectInfo)
+  await axios.request({
+    url: 'http://172.30.251.53:8888/fast/statistics', // 正式信息保存接口
+    method: 'post',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    data: projectInfo,
+    timeout: 1000 * 10
   })
 }
 
@@ -345,15 +380,27 @@ prompt([
   }
 ]).then(res => {
   if (res && res.proceed) {
-    fs.access('src/models/SystemConfig.js').then(() => {
-      // 工程存在配置文件
-      isThorProject = true
-      proceed()
-    }).catch(() => {
-      // 工程不存在配置文件
-      // console.error(err)
-      isThorProject = false
-      proceed()
+    prompt([
+      {
+        type: 'input',
+        name: 'operator',
+        message: '输入您的OA账号或者姓名',
+        validate: input => !!input
+      }
+    ]).then(res => {
+      if (res && res.operator) {
+        operator = res.operator
+        fs.access('src/models/SystemConfig.js').then(() => {
+          // 工程存在配置文件
+          isThorProject = true
+          proceed()
+        }).catch(() => {
+          // 工程不存在配置文件
+          // console.error(err)
+          isThorProject = false
+          proceed()
+        })
+      }
     })
   }
 })
