@@ -354,7 +354,8 @@ const makeSureFile = (path, data) => {
 }
 
 const walkMerge = (originalFilePath, newContent) => {
-  const oriContent = readFileContent(originalFilePath)
+  let oriContent = readFileContent(originalFilePath)
+  oriContent = oriContent.replace(new RegExp('\\r\\n', 'g'), '\n')
   const diffs = diff.diffLines(oriContent, newContent)
   let merged = ''
   let count = 0
