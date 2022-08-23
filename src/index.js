@@ -154,21 +154,39 @@ const handleUpdate = ({ localVersion, remoteVersion }) => {
     axios.get(remoteThorRepoBaseUrl + 'template/pc/src/utils/CommonBizUtil.js'),
     axios.get(remoteThorRepoBaseUrl + 'template/pc/src/components/EmbedCommonBizEdit.vue'),
     axios.get(remoteThorRepoBaseUrl + 'template/pc/src/views/CommonBizList.vue'),
-    axios.get(remoteThorRepoBaseUrl + 'template/pc/src/views/CommonBizEdit.vue')
+    axios.get(remoteThorRepoBaseUrl + 'template/pc/src/views/CommonBizEdit.vue'),
+    axios.get(remoteThorRepoBaseUrl + 'template/pc/src/models/bizconfig/Dlanguages.js'),
+    axios.get(remoteThorRepoBaseUrl + 'template/pc/src/models/bizconfig/Dmenus.js'),
+    axios.get(remoteThorRepoBaseUrl + 'template/pc/src/models/bizconfig/Droles.js'),
+    axios.get(remoteThorRepoBaseUrl + 'template/pc/src/models/bizconfig/Dsso.js'),
+    axios.get(remoteThorRepoBaseUrl + 'template/pc/src/models/bizconfig/DsysLogs.js'),
+    axios.get(remoteThorRepoBaseUrl + 'template/pc/src/models/bizconfig/Dusers.js')
   ]).then(datas => {
     if (datas.some(item => !item || item.status !== 200)) {
       throw new Error('获取远程文件内容发生错误！')
     }
-    let [utilData, embedEditCompData, listVueData, editVueData] = datas
+    let [utilData, embedEditCompData, listVueData, editVueData, DlanguagesData, DmenusData, DrolesData, DssoData, DsysLogsData, DusersData] = datas
     utilData = utilData.data
     embedEditCompData = embedEditCompData.data
     listVueData = listVueData.data
     editVueData = editVueData.data
+    DlanguagesData = DlanguagesData.data
+    DmenusData = DmenusData.data
+    DrolesData = DrolesData.data
+    DssoData = DssoData.data
+    DsysLogsData = DsysLogsData.data
+    DusersData = DusersData.data
     fs.ensureDir('src/models/bizconfig/')
     fs.outputFileSync('src/utils/CommonBizUtil.js', utilData)
     fs.outputFileSync('src/components/EmbedCommonBizEdit.vue', embedEditCompData)
     fs.outputFileSync('src/views/CommonBizList.vue', listVueData)
     fs.outputFileSync('src/views/CommonBizEdit.vue', editVueData)
+    fs.outputFileSync('src/models/bizconfig/Dlanguages.js', DlanguagesData)
+    fs.outputFileSync('src/models/bizconfig/Dmenus.js', DmenusData)
+    fs.outputFileSync('src/models/bizconfig/Droles.js', DrolesData)
+    fs.outputFileSync('src/models/bizconfig/Dsso.js', DssoData)
+    fs.outputFileSync('src/models/bizconfig/DsysLogs.js', DsysLogsData)
+    fs.outputFileSync('src/models/bizconfig/Dusers.js', DusersData)
     // 更新本地版本号
     let thorConfigContent = JSON.parse(readFileContent('.thorconfig.json'))
     thorConfigContent.bizpageVersion = remoteVersion
@@ -230,6 +248,7 @@ const handleUpdateFm = ({ localVersion, remoteVersion }) => {
     axios.get(remoteThorRepoBaseUrl + 'template/pc/vue.config.js'),
     axios.get(remoteThorRepoBaseUrl + 'template/pc/babel.config.js'),
     axios.get(remoteThorRepoBaseUrl + 'template/pc/_eslintignore'),
+    axios.get(remoteThorRepoBaseUrl + 'template/pc/_eslintrc.js'),
     axios.get(remoteThorRepoBaseUrl + 'template/pc/src/main.js'),
     axios.get(remoteThorRepoBaseUrl + 'template/pc/src/api/base.js'),
     axios.get(remoteThorRepoBaseUrl + 'template/pc/src/models/system.js'),
@@ -253,10 +272,11 @@ const handleUpdateFm = ({ localVersion, remoteVersion }) => {
     if (datas.some(item => !item || item.status !== 200)) {
       throw new Error('获取远程文件内容发生错误！')
     }
-    let [vueConfigData, babelConfigData, eslintignoreData, mainjsData, apiBaseData, systemData, buildData, zhCnLang, enLang, resizeTableColumnDirective, commonUtilData, i18nUtilData, systemCtrlData, headbarComp, popoverTooltipComp, logoutPopComp, commonWrapperComp, pageTabComp, loginVue, ssoLandingVue, changePinVue, editRoleVue] = datas
+    let [vueConfigData, babelConfigData, eslintignoreData, eslintrcData, mainjsData, apiBaseData, systemData, buildData, zhCnLang, enLang, resizeTableColumnDirective, commonUtilData, i18nUtilData, systemCtrlData, headbarComp, popoverTooltipComp, logoutPopComp, commonWrapperComp, pageTabComp, loginVue, ssoLandingVue, changePinVue, editRoleVue] = datas
     vueConfigData = vueConfigData.data
     babelConfigData = babelConfigData.data
     eslintignoreData = eslintignoreData.data
+    eslintrcData = eslintrcData.data
     mainjsData = mainjsData.data
     apiBaseData = apiBaseData.data
     systemData = systemData.data
@@ -279,6 +299,7 @@ const handleUpdateFm = ({ localVersion, remoteVersion }) => {
     // 直接覆盖原始文件
     fs.outputFileSync('babel.config.js', babelConfigData)
     fs.outputFileSync('.eslintignore', eslintignoreData)
+    fs.outputFileSync('.eslintrc.js', eslintrcData)
     fs.outputFileSync('src/directives/resizeTableColumn.js', resizeTableColumnDirective)
     fs.outputFileSync('src/utils/CommonUtil.js', commonUtilData)
     fs.outputFileSync('src/utils/i18nUtil.js', i18nUtilData)

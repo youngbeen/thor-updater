@@ -15,12 +15,19 @@
 * `template/pc/src/components/EmbedCommonBizEdit.vue` - 覆盖
 * `template/pc/src/views/CommonBizList.vue` - 覆盖
 * `template/pc/src/views/CommonBizEdit.vue` - 覆盖
+* `template/pc/src/models/bizconfig/Dlanguages.js` - 覆盖
+* `template/pc/src/models/bizconfig/Dmenus.js` - 覆盖
+* `template/pc/src/models/bizconfig/Droles.js` - 覆盖
+* `template/pc/src/models/bizconfig/Dsso.js` - 覆盖
+* `template/pc/src/models/bizconfig/DsysLogs.js` - 覆盖
+* `template/pc/src/models/bizconfig/Dusers.js` - 覆盖
 
 ### 更新框架
 
 * `template/pc/vue.config.js` - 无则复制，有则合并
 * `template/pc/babel.config.js` - 覆盖
 * `template/pc/_eslintignore` - 覆盖
+* `template/pc/_eslintrc.js` - 覆盖
 * `template/pc/src/main.js` - 无则复制，有则合并
 * `template/pc/src/api/base.js` - 无则复制，有则合并
 * `template/pc/src/models/system.js` - 无则复制，有则合并
