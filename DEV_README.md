@@ -4,6 +4,7 @@
 * `template/pc/src/EventBus.js` - 有则不处理，无则复制
 * `template/pc/src/models/SystemConfig.js` - 有则不处理，无则复制
 * `template/pc/src/components/PopoverTooltip.vue` - 有则不处理，无则复制
+* `template/pc/src/components/SensitiveInfo.vue` - 覆盖
 * `template/pc/src/components/EmbedCommonBizEdit.vue` - 覆盖
 * `template/pc/src/utils/CommonBizUtil.js` - 覆盖
 * `template/pc/src/views/CommonBizList.vue` - 覆盖
@@ -12,6 +13,7 @@
 ### 更新可配置化
 
 * `template/pc/src/utils/CommonBizUtil.js` - 覆盖
+* `template/pc/src/components/SensitiveInfo.vue` - 覆盖
 * `template/pc/src/components/EmbedCommonBizEdit.vue` - 覆盖
 * `template/pc/src/views/CommonBizList.vue` - 覆盖
 * `template/pc/src/views/CommonBizEdit.vue` - 覆盖
