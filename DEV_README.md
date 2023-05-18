@@ -23,6 +23,7 @@
 * `template/pc/src/models/bizconfig/Dsso.js` - 覆盖
 * `template/pc/src/models/bizconfig/DsysLogs.js` - 覆盖
 * `template/pc/src/models/bizconfig/Dusers.js` - 覆盖
+* `template/pc/src/models/bizconfig/Dorg.js` - 覆盖
 
 ### 更新框架
 
@@ -32,6 +33,8 @@
 * `template/pc/_eslintrc.js` - 覆盖
 * `template/pc/src/main.js` - 无则复制，有则合并
 * `template/pc/src/api/base.js` - 无则复制，有则合并
+* `template/pc/src/api/org.js` - 无则复制，有则合并
+* `template/pc/src/api/user.js` - 无则复制，有则合并
 * `template/pc/src/models/system.js` - 无则复制，有则合并
 * `template/pc/src/models/build.js` - 无则复制，有则合并
 * `template/pc/src/models/i18n/zh-cn.js` - 有则不处理，无则复制
@@ -49,3 +52,5 @@
 * `template/pc/src/views/SSOLanding.vue` - 覆盖
 * `template/pc/src/views/ChangePin.vue` - 覆盖
 * `template/pc/src/views/role/AddEdit.vue` - 覆盖
+* `template/pc/src/views/org/AddEdit.vue` - 覆盖
+* `template/pc/src/views/user/AddEdit.vue` - 覆盖

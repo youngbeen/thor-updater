@@ -166,12 +166,13 @@ const handleUpdate = ({ localVersion, remoteVersion }) => {
     axios.get(remoteThorRepoBaseUrl + 'template/pc/src/models/bizconfig/Droles.js'),
     axios.get(remoteThorRepoBaseUrl + 'template/pc/src/models/bizconfig/Dsso.js'),
     axios.get(remoteThorRepoBaseUrl + 'template/pc/src/models/bizconfig/DsysLogs.js'),
-    axios.get(remoteThorRepoBaseUrl + 'template/pc/src/models/bizconfig/Dusers.js')
+    axios.get(remoteThorRepoBaseUrl + 'template/pc/src/models/bizconfig/Dusers.js'),
+    axios.get(remoteThorRepoBaseUrl + 'template/pc/src/models/bizconfig/Dorg.js')
   ]).then(datas => {
     if (datas.some(item => !item || item.status !== 200)) {
       throw new Error('获取远程文件内容发生错误！')
     }
-    let [utilData, sensitiveInfoCompData, embedEditCompData, listVueData, editVueData, DlanguagesData, DmenusData, DrolesData, DssoData, DsysLogsData, DusersData] = datas
+    let [utilData, sensitiveInfoCompData, embedEditCompData, listVueData, editVueData, DlanguagesData, DmenusData, DrolesData, DssoData, DsysLogsData, DusersData, DorgData] = datas
     utilData = utilData.data
     sensitiveInfoCompData = sensitiveInfoCompData.data
     embedEditCompData = embedEditCompData.data
@@ -183,6 +184,7 @@ const handleUpdate = ({ localVersion, remoteVersion }) => {
     DssoData = DssoData.data
     DsysLogsData = DsysLogsData.data
     DusersData = DusersData.data
+    DorgData = DorgData.data
     fs.ensureDir('src/models/bizconfig/')
     fs.outputFileSync('src/utils/CommonBizUtil.js', utilData)
     fs.outputFileSync('src/components/SensitiveInfo.vue', sensitiveInfoCompData)
@@ -195,6 +197,7 @@ const handleUpdate = ({ localVersion, remoteVersion }) => {
     fs.outputFileSync('src/models/bizconfig/Dsso.js', DssoData)
     fs.outputFileSync('src/models/bizconfig/DsysLogs.js', DsysLogsData)
     fs.outputFileSync('src/models/bizconfig/Dusers.js', DusersData)
+    fs.outputFileSync('src/models/bizconfig/Dorg.js', DorgData)
     // 更新本地版本号
     let thorConfigContent = JSON.parse(readFileContent('.thorconfig.json'))
     thorConfigContent.bizpageVersion = remoteVersion
@@ -260,6 +263,8 @@ const handleUpdateFm = ({ localVersion, remoteVersion }) => {
     axios.get(remoteThorRepoBaseUrl + 'template/pc/_eslintrc.js'),
     axios.get(remoteThorRepoBaseUrl + 'template/pc/src/main.js'),
     axios.get(remoteThorRepoBaseUrl + 'template/pc/src/api/base.js'),
+    axios.get(remoteThorRepoBaseUrl + 'template/pc/src/api/org.js'),
+    axios.get(remoteThorRepoBaseUrl + 'template/pc/src/api/user.js'),
     axios.get(remoteThorRepoBaseUrl + 'template/pc/src/models/system.js'),
     axios.get(remoteThorRepoBaseUrl + 'template/pc/src/models/build.js'),
     axios.get(remoteThorRepoBaseUrl + 'template/pc/src/models/i18n/zh-cn.js'),
@@ -276,18 +281,22 @@ const handleUpdateFm = ({ localVersion, remoteVersion }) => {
     axios.get(remoteThorRepoBaseUrl + 'template/pc/src/views/Login.vue'),
     axios.get(remoteThorRepoBaseUrl + 'template/pc/src/views/SSOLanding.vue'),
     axios.get(remoteThorRepoBaseUrl + 'template/pc/src/views/ChangePin.vue'),
-    axios.get(remoteThorRepoBaseUrl + 'template/pc/src/views/role/AddEdit.vue')
+    axios.get(remoteThorRepoBaseUrl + 'template/pc/src/views/role/AddEdit.vue'),
+    axios.get(remoteThorRepoBaseUrl + 'template/pc/src/views/org/AddEdit.vue'),
+    axios.get(remoteThorRepoBaseUrl + 'template/pc/src/views/user/AddEdit.vue')
   ]).then(datas => {
     if (datas.some(item => !item || item.status !== 200)) {
       throw new Error('获取远程文件内容发生错误！')
     }
-    let [vueConfigData, babelConfigData, eslintignoreData, eslintrcData, mainjsData, apiBaseData, systemData, buildData, zhCnLang, enLang, resizeTableColumnDirective, commonUtilData, i18nUtilData, systemCtrlData, headbarComp, popoverTooltipComp, logoutPopComp, commonWrapperComp, pageTabComp, loginVue, ssoLandingVue, changePinVue, editRoleVue] = datas
+    let [vueConfigData, babelConfigData, eslintignoreData, eslintrcData, mainjsData, apiBaseData, apiOrgData, apiUserData, systemData, buildData, zhCnLang, enLang, resizeTableColumnDirective, commonUtilData, i18nUtilData, systemCtrlData, headbarComp, popoverTooltipComp, logoutPopComp, commonWrapperComp, pageTabComp, loginVue, ssoLandingVue, changePinVue, editRoleVue, editOrgVue, editUserVue] = datas
     vueConfigData = vueConfigData.data
     babelConfigData = babelConfigData.data
     eslintignoreData = eslintignoreData.data
     eslintrcData = eslintrcData.data
     mainjsData = mainjsData.data
     apiBaseData = apiBaseData.data
+    apiOrgData = apiOrgData.data
+    apiUserData = apiUserData.data
     systemData = systemData.data
     buildData = buildData.data
     zhCnLang = zhCnLang.data
@@ -305,6 +314,8 @@ const handleUpdateFm = ({ localVersion, remoteVersion }) => {
     ssoLandingVue = ssoLandingVue.data
     changePinVue = changePinVue.data
     editRoleVue = editRoleVue.data
+    editOrgVue = editOrgVue.data
+    editUserVue = editUserVue.data
     // 直接覆盖原始文件
     fs.outputFileSync('babel.config.js', babelConfigData)
     fs.outputFileSync('.eslintignore', eslintignoreData)
@@ -319,10 +330,14 @@ const handleUpdateFm = ({ localVersion, remoteVersion }) => {
     fs.outputFileSync('src/views/SSOLanding.vue', ssoLandingVue)
     fs.outputFileSync('src/views/ChangePin.vue', changePinVue)
     fs.outputFileSync('src/views/role/AddEdit.vue', editRoleVue)
+    fs.outputFileSync('src/views/org/AddEdit.vue', editOrgVue)
+    fs.outputFileSync('src/views/user/AddEdit.vue', editUserVue)
     // 没有则复制，有则合并更新
     mergeOrNew('vue.config.js', vueConfigData)
     mergeOrNew('src/main.js', mainjsData)
     mergeOrNew('src/api/base.js', apiBaseData)
+    mergeOrNew('src/api/org.js', apiOrgData)
+    mergeOrNew('src/api/user.js', apiUserData)
     mergeOrNew('src/models/system.js', systemData)
     mergeOrNew('src/models/build.js', buildData)
     mergeOrNew('src/ctrls/SystemCtrl.js', systemCtrlData)
